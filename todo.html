@@ -435,11 +435,11 @@
           refreshTaskId(id);
         }
 
-        function expandTask(id,first=true,recurse=1) {
-          if (recurse == 0) {
-            allTasks[id]["_collapsed"] = true;
-          } else {
+        function expandTask(id,first=true,recurse=false) {
+          if (first || recurse) {
             allTasks[id]["_collapsed"] = false;
+          } else {
+            // allTasks[id]["_collapsed"] = false;
           }
           refreshTaskId(id);
           $('tr.taskRow').each(function(){
@@ -455,18 +455,19 @@
                 tr.show();
                 tr.removeClass("onCollapse");
                 tr.addClass("onAdd");
-                // setTimeout(function(){tr.show();},500);
               }
           });
-          if (recurse > 0) {
+          if (! allTasks[id]["_collapsed"]) {
             for (var i = 0; i < allTasks[id]["children"].length; ++i) {
-              expandTask(allTasks[id]["children"][i]['id'],false,recurse-1);
+              expandTask(allTasks[id]["children"][i]['id'],false,recurse);
             }
           }
         }
 
         function collapseTask(id,first=true) {
-          allTasks[id]["_collapsed"] = true;
+          if (first) {
+            allTasks[id]["_collapsed"] = true;
+          }
           for (var i = 0; i < allTasks[id]["children"].length; ++i) {
             collapseTask(allTasks[id]["children"][i]['id'],false);
           }
@@ -478,7 +479,6 @@
                   tr.removeClass("onAdd");
                   tr.addClass("onCollapse");
                   setTimeout(function(){tr.hide();},500);
-                  // tr.hide();
                 }
             });
           } else {
@@ -651,17 +651,22 @@
           }
           if (task["deps"] != "") {
             var deps = task['deps'].split(",");
+            if (deps.length > 0) {
+              task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
+            }
             for (var i = 0; i < deps.length; ++i) {
               if (! ("_dependents" in allTasks[deps[i]])) {
                 allTasks[deps[i]]["_dependents"] = [];
               }
               allTasks[deps[i]]["_dependents"].push(task["id"]);
-              if (task['_available']) {
-                task['_available'] = false;  //Can't do a task with dependencies
-                task["_tooltip"] = "Has dependencies";
-                task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
+              var depCompleted = parseInt(allTasks[deps[i]]["completion"]) == 1;
+              if (!depCompleted) {
+                if (task['_available']) {
+                  task['_available'] = false;  //Can't do a task with dependencies
+                  task["_tooltip"] = "Has dependencies";
+                }
               }
-              if (parseInt(allTasks[deps[i]]["completion"]) == 1) {
+              if (depCompleted) {
                 status = "./images/check.png";
               } else {
                 status = "./images/cross.png";
