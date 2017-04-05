@@ -7,11 +7,13 @@ body {
   color: white;
   background-color: rgba(64,64,64,1);
   background-image: url("./images/hgray2.jpg");
+  text-align: center;
 }
 th {
   text-align: center;
 }
 #taskTable {
+  text-align: left;
   border-collapse: collapse;
   white-space: nowrap
 }
@@ -24,7 +26,7 @@ th {
   /*border : 1px solid black;*/
 }
 .highlight {
-  border-radius: 25px;
+  border-radius: 25pt;
   background: #73AD21;
   padding: 2pt 10pt 2pt 10pt;
   color: white;
@@ -64,12 +66,6 @@ meter::-moz-meter-bar { /* Firefox Pseudo Class */
 
 
 .highlight .tooltipclass {
-  /* needed - do not touch */
-  /*content: attr(tooltip);*/
-  /*content: attr(innerHTML);*/
-
-  /*display: none;*/
-
   position: absolute;
   opacity: 0;
 
@@ -87,20 +83,26 @@ meter::-moz-meter-bar { /* Firefox Pseudo Class */
   max-height: 0;
   overflow: hidden;
   /*transition: all 0.5s ease;*/
-  transition: max-height 1s ease;
+  transition: max-height 3s ease;
+  /*transition: max-height 1s ease;*/
 }
 
-#editTaskForm {
+.highlight:hover .tooltipclass {
+  max-height: 1000pt;
+  opacity: 1;
+}
+
+div#editTaskForm {
   position: fixed;
   opacity: 1;
 
-  display: inline;
+  display: block;
   text-align: center;
 
   /* customizable */
   /*padding: 10px;*/
   color: #FFF;
-  border-radius: 10px;
+  border-radius: 100px;
   box-shadow: 2px 2px 1px black;
   /*margin-top: 0px;*/
   /*margin-left: 20px;*/
@@ -108,30 +110,30 @@ meter::-moz-meter-bar { /* Firefox Pseudo Class */
   background: rgba(0,0,0,0.5);
   overflow: hidden;
   /*transition: all 0.5s ease;*/
-  transition: max-height 1s ease;
+  /*transition: max-height 1s ease;*/
 
   position: fixed;
+  /*width: 100%;*/
+  /*height: 100%;*/
+  left: 25%;
+  top: 25%;
   width: 50%;
   height: 50%;
-  left: 50%;
-  top: 50%;
-  margin-left: -25%;
-  margin-top: -25%;
+  /*margin-left: auto;*/
+  /*margin-top: -225pt;*/
+  /*margin-right: 0%;*/
 }
 
 #editTaskForm table {
+  display: inline-block;
   position: relative;
-  height: 100%;
-  width: 100%;
+  /*height: 100%;*/
+  /*width: 100%;*/
+  /*margin-left: -50%;*/
+  margin-top: 10%;
   text-align: center;
-  /*margin: auto auto;*/
   /*display: table-cell;*/
   vertical-align: middle;
-}
-
-.highlight:hover .tooltipclass {
-  max-height: 1000pt;
-  opacity: 1;
 }
 
 .actionicon {

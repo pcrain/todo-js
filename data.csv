@@ -1,26 +1,18 @@
-id|parent|deps|desc|project|priority|startDate|startTime|dueDate|dueTime|schedDate|schedTime|completion|color|estTime|done
-1|||Javascript ToDo ToDo!|todo|0|||2017/05/01|12_00_00|2017/05/01|00_00_00|0.01|green|100h|
-2|1||UI|||||2017/05/02|13_00_00||||red||
-3|2||Improve colors on progress bar|||||2017/06/01|14_00_00||||||
-4|2||Add tree structure to tasks|||||2016/05/01|15_00_00||||||x
-7|2||Improve displays for date / time|||||2019/05/01|11_00_00||||||
-5|1||Functionality|||||2017/05/11|10_00_00||||blue||
-6|5||Make task list collapsible|||||2017/07/01|09_00_00||||||
-8|5||Allow sorting by due date|||||2018/06/01|08_00_00||||||
-16|5||Can’t do this yet|||2018/01/01|12_00_00|2027/05/01|07_00_00||||orange||
-9|5||Allow sorting by schedule date|||||2117/05/01|06_00_00||||||
-12|5|16,6,17|Dependencies|||||1017/05/01|05_00_00||||||
-10|5||Get done flag working|||||2017/02/01|04_00_00||||||x
-11|5||Get buttons|||||2017/05/02|03_00_00||||||
-17|5||Already done|||||2017/05/01|02_00_00||||||x
-|||||||||||||||
-13|5||Minimum start time||||||||||||x
-14|5||Repeating tasks||||||||||||
-15|5||Automatic Prioritization||||||||||||
-|||||||||||||||
-|||||||||||||||
-|||||||||||||||
-|||||||||||||||
-|||||||||||||||
-|||||||||||||||
-|||anything without an id is ignored||||||||||||
+id|parent|deps|completion|desc|project|dueDate|dueTime|schedDate|schedTime|startDate|startTime|color|estTime|priority
+1|||0.1|Javascript ToDo ToDo!|todo|2017/05/01|12_00_00|2017/05/01|00_00_00|||green|100h|0
+2|1|||UI||2017/05/02||||||red||
+3|2|||Improve colors on progress bar||2017/06/01|14_00_00|||||||
+4|2||1|Add tree structure to tasks||2016/05/01|15_00_00|||||||
+7|2||1|Improve displays for date / time||2019/05/01|11_00_00|||||||
+5|1|||Functionality||2017/05/11|10_00_00|||||blue||
+6|5||1|Make task list collapsible||2017/07/01|09_00_00|||||||
+8|5||1|Allow sorting by due date||2018/06/01|08_00_00|||||||
+16|5|||Can’t do this yet||2027/05/01|07_00_00|||2018/01/01|12_00_00|orange||
+9|5||1|Allow sorting by schedule date||2117/05/01|06_00_00|||||||
+12|5|16,6,17||Dependencies||1017/05/01|05_00_00|||||||
+10|5||1|Get done flag working||2017/02/01|04_00_00|||||||
+11|5|||Get buttons||2017/05/02|03_00_00|||||||
+17|5||1|Already done||2017/05/01|02_00_00|||||||
+13|5||1|Minimum start time||||||||||
+14|5|||Repeating tasks||||||||||
+15|5|||Automatic Prioritization||||||||||
