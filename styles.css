@@ -1,0 +1,172 @@
+body {
+  font-size: 10pt;
+  font-family: "Georgia, serif";
+  font-family: "monospace";
+  font-style: oblique;
+  font-weight: bold;
+  color: white;
+  background-color: rgba(64,64,64,1);
+  background-image: url("./images/hgray2.jpg");
+}
+th {
+  text-align: center;
+}
+#taskTable {
+  border-collapse: collapse;
+  white-space: nowrap
+}
+#taskTable th {
+  padding : 0pt 10pt 0pt 10pt;
+  height : 24pt;
+}
+#taskTable td {
+  padding : 0pt 0 1pt 10pt;
+  /*border : 1px solid black;*/
+}
+.highlight {
+  border-radius: 25px;
+  background: #73AD21;
+  padding: 2pt 10pt 2pt 10pt;
+  color: white;
+  margin: 0px;
+  display: inline-block;
+  text-shadow: 0pt 0pt 3pt #000000;
+  background-color: lightgray;
+  background-blend-mode: multiply;
+  cursor: help;
+}
+meter::-moz-meter-bar { /* Firefox Pseudo Class */
+  /*background: red;*/
+  box-shadow: 0 5pt 5pt -5pt #999 inset;
+  /*background-image: linear-gradient(
+    0deg,
+    #719fd1 0%,
+    #8bcf69 100%
+  );*/
+   /*      background-image:
+      -webkit-linear-gradient(
+        -45deg,
+        transparent 33%, rgba(0, 0, 0, .1) 33%,
+        rgba(0, 0, 0, .1) 66%, transparent 66%
+      ),
+      -webkit-linear-gradient(
+        top,
+        rgba(255, 255, 255, .25),
+        rgba(0, 0, 0, .25)
+      ),
+      -webkit-linear-gradient(left, #09c, #09c);*/
+  /*background-size: 100% 100%;*/
+}
+
+.tooltipclass {
+  pointer-events: none;
+}
+
+
+.highlight .tooltipclass {
+  /* needed - do not touch */
+  /*content: attr(tooltip);*/
+  /*content: attr(innerHTML);*/
+
+  /*display: none;*/
+
+  position: absolute;
+  opacity: 0;
+
+  display: inline;
+
+  /* customizable */
+  padding: 10px;
+  color: #FFF;
+  border-radius: 10px;
+  box-shadow: 2px 2px 1px black;
+  margin-top: 0px;
+  margin-left: 20px;
+  white-space: pre-wrap;
+  background: rgba(0,0,0,0.5);
+  max-height: 0;
+  overflow: hidden;
+  /*transition: all 0.5s ease;*/
+  transition: max-height 1s ease;
+}
+
+#editTaskForm {
+  position: fixed;
+  opacity: 1;
+
+  display: inline;
+  text-align: center;
+
+  /* customizable */
+  /*padding: 10px;*/
+  color: #FFF;
+  border-radius: 10px;
+  box-shadow: 2px 2px 1px black;
+  /*margin-top: 0px;*/
+  /*margin-left: 20px;*/
+  white-space: pre-wrap;
+  background: rgba(0,0,0,0.5);
+  overflow: hidden;
+  /*transition: all 0.5s ease;*/
+  transition: max-height 1s ease;
+
+  position: fixed;
+  width: 50%;
+  height: 50%;
+  left: 50%;
+  top: 50%;
+  margin-left: -25%;
+  margin-top: -25%;
+}
+
+#editTaskForm table {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  /*margin: auto auto;*/
+  /*display: table-cell;*/
+  vertical-align: middle;
+}
+
+.highlight:hover .tooltipclass {
+  max-height: 1000pt;
+  opacity: 1;
+}
+
+.actionicon {
+  height: 16pt;
+  margin: 0;
+  padding: 0;
+}
+
+.tooltipicon {
+  height: 12pt;
+  margin: 2;
+  padding: 2;
+}
+
+#taskTable .actiontd {
+  padding: 0;
+  text-align: center;
+}
+
+.invisible {
+  display: none;
+}
+
+.sortableHeader {
+  cursor: pointer;
+}
+
+.sortableHeader:hover {
+  color: red;
+}
+
+.exportButton {
+  cursor: pointer;
+  border-radius: 20pt;
+  background: rgba(255,255,255,1);
+  background: radial-gradient(ellipse, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 70%);
+  color: red;
+}

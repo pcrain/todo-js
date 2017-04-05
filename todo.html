@@ -1,173 +1,29 @@
 <!DOCTYPE HTML>
 <html>
-
-<head>
-
-  <!-- Meta -->
+  <head>
     <meta charset="UTF-8">
-
-  <!-- External JS -->
+    <link rel="stylesheet" href="styles.css">
     <script type="text/javascript" src="jquery-3.2.0.js"></script>
-    <!-- <script type="text/javascript" src="jquery.tablesorter.js"></script> -->
-    <!-- <script type="text/javascript" src="jquery.tablesorter.widgets.js"></script> -->
-
-  <!-- CSS -->
-    <style type="text/css">
-      body {
-        font-size: 10pt;
-        font-family: "Georgia, serif";
-        font-family: "monospace";
-        font-style: oblique;
-        font-weight: bold;
-        background-color: gray;
-      }
-      th {
-        text-align: center;
-      }
-      #taskTable {
-        border-collapse: collapse;
-        white-space: nowrap
-      }
-      #taskTable th {
-        padding : 0pt 10pt 0pt 10pt;
-        height : 24pt;
-      }
-      #taskTable td {
-        padding : 0pt 0 1pt 10pt;
-        /*border : 1px solid black;*/
-      }
-      .outerhighlight {
-        border-radius: 25px;
-        background: rgba(0,0,0,0);
-        /*padding: 2px;*/
-        color: white;
-        margin: 0px;
-        display: inline-block;
-        /*background-image: -webkit-linear-gradient(top, rgba(0,0,0,255), rgba(255,255,255,255));*/
-      }
-      .highlight {
-        border-radius: 25px;
-        background: #73AD21;
-        padding: 2pt 10pt 2pt 10pt;
-        color: white;
-        margin: 0px;
-        display: inline-block;
-        text-shadow: 0pt 0pt 3pt #000000;
-        background-color: lightgray;
-        background-blend-mode: multiply;
-        cursor: help;
-      }
-      meter::-moz-meter-bar { /* Firefox Pseudo Class */
-        /*background: red;*/
-        box-shadow: 0 5pt 5pt -5pt #999 inset;
-        /*background-image: linear-gradient(
-          0deg,
-          #719fd1 0%,
-          #8bcf69 100%
-        );*/
-         /*      background-image:
-            -webkit-linear-gradient(
-              -45deg,
-              transparent 33%, rgba(0, 0, 0, .1) 33%,
-              rgba(0, 0, 0, .1) 66%, transparent 66%
-            ),
-            -webkit-linear-gradient(
-              top,
-              rgba(255, 255, 255, .25),
-              rgba(0, 0, 0, .25)
-            ),
-            -webkit-linear-gradient(left, #09c, #09c);*/
-        /*background-size: 100% 100%;*/
-      }
-
-      .tooltipclass {
-        pointer-events: none;
-      }
-
-
-      .highlight .tooltipclass {
-        /* needed - do not touch */
-        /*content: attr(tooltip);*/
-        /*content: attr(innerHTML);*/
-
-        /*display: none;*/
-
-        position: absolute;
-        opacity: 0;
-
-        display: inline;
-
-        /* customizable */
-        padding: 10px;
-        color: #FFF;
-        border-radius: 10px;
-        box-shadow: 2px 2px 1px black;
-        margin-top: 0px;
-        margin-left: 20px;
-        white-space: pre-wrap;
-        background: rgba(0,0,0,0.5);
-        max-height: 0;
-        overflow: hidden;
-        /*transition: all 0.5s ease;*/
-        transition: max-height 1s ease;
-      }
-
-      .highlight:hover .tooltipclass {
-        max-height: 1000pt;
-        opacity: 1;
-      }
-
-      .actionicon {
-        height: 16pt;
-        margin: 0;
-        padding: 0;
-      }
-
-      .tooltipicon {
-        height: 12pt;
-        margin: 2;
-        padding: 2;
-      }
-
-      #taskTable .actiontd {
-        padding: 0;
-        text-align: center;
-      }
-
-      .invisible {
-        display: none;
-      }
-
-      .sortableHeader {
-        cursor: pointer;
-      }
-
-      .sortableHeader:hover {
-        color: red;
-      }
-
-      .exportButton {
-        cursor: pointer;
-        border-radius: 20pt;
-        background: rgba(255,255,255,1);
-        background: radial-gradient(ellipse, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 70%);
-        color: red;
-      }
-
-    </style>
-
-  <!-- Javascript -->
     <script>
+      // Global Variables
       var fields = [];
       var allTasks = {};
 
-      function indentText(i)    { return 'padding: 0 0 0 '+(i*20).toString()+'px;'; }
-      function bg(col)    {
+      function indentTextString(i)    {
+        return 'padding: 0 0 0 '+(i*20).toString()+'px;';
+      }
+
+      function taskBG(col)    {
         // gradient = "-webkit-linear-gradient(right, "+col+", rgba(255,255,255,255))";
         gradient = "-webkit-linear-gradient(top, rgba(255,255,255,128), "+col+")";
         return 'background-image: '+gradient+';';
       }
 
+      function dummyAlert(ss) {
+        alert(ss);
+      }
+
+      //Read in a todo-data CSV from the specified file and store it in allTasks
       function parseTaskCSV(file) {
         var rawFile = new XMLHttpRequest();
         rawFile.open("GET", file, false);
@@ -191,6 +47,7 @@
                   continue;
                 }
                 var taskData = {};
+                taskData["_depth"] = 0;
                 taskData["children"] = [];
                 for (var i = 0; i < split.length; i++) {
                   taskData[fields[i]] = split[i];
@@ -248,10 +105,20 @@
         return (d != "" ? parseYmdDate(d) : d);
       }
 
+      function getTaskDueTime(task) {
+        t = task['dueTime'];
+        return (t != "" ? parseHmsTime(t) : t);
+      }
+
       function getTaskSchedDate(task) {
         return task['_schedDateTime'];
         d = task['schedDate'];
         return (d != "" ? parseYmdDate(d) : d);
+      }
+
+      function getTaskSchedTime(task) {
+        t = task['schedTime'];
+        return (t != "" ? parseHmsTime(t) : t);
       }
 
       function getTaskStartDate(task) {
@@ -264,22 +131,33 @@
         return (t != "" ? parseHmsTime(t) : t);
       }
 
-      function getTaskSchedTime(task) {
-        t = task['schedTime'];
-        return (t != "" ? parseHmsTime(t) : t);
+      function getTaskProject(task) {
+        //Get explicitly stated project
+        if (task['project'] != "") {
+          task['_project'] = task['project'];
+          return task['_project'];
+        }
+        //Use previously computed project
+        if ('_project' in task) {
+          return task['_project'];
+        }
+        //Infer project from parent
+        if (task['parent'] > 0) { //Inherit
+          task['_project'] = allTasks[task["parent"]]["_project"];
+          return task['_project'];
+        }
+        //Return a default
+        return "default";
       }
 
-      function getTaskDueTime(task) {
-        t = task['dueTime'];
-        return (t != "" ? parseHmsTime(t) : t);
+      function getTaskProgress(task) {
+        comp = ( task['done'] == "" ? task['completion'] : "1" );
+        return '<meter value="'+comp+'"></meter>';
       }
 
       function writeTaskTooltip(task) {
         var ss = "";
-        // ss += '<div class="outerhighlight" tooltip="';
-        // ss += '<div class="outerhighlight">';
         ss += '<div class="tooltipclass">';
-
         ss += "<table class='tttable'>"
         ss += "<tr><td>Task</td><td>["+task["id"]+"] "+task["desc"]+"</td></tr>";
         ss += "<tr><td>Project</td><td>"+getTaskProject(task)+"</td></tr>";
@@ -287,22 +165,69 @@
         ss += "<tr><td colspan='2'>"+task["_dependencies"]+"</td></tr>";
         ss += "<tr><td colspan='2'>"+task["_tooltip"]+"</td></tr>";
         ss += "</table>";
-
-        // ss += task["_tooltip"];
-
-        // ss += '">';
         ss += '</div>';
-        // ss += '</div>';
         return ss;
       }
 
-      function writeTaskTooltipOld(task) {
+      function modifyTask(id) {
+        dismissModifedTask();
+        var task = allTasks[id];
+        var div = document.createElement('div');
+        div.id = "editTaskForm";
+
         var ss = "";
-        ss += '<div tooltip="';
-        ss += "<table class='tttable'>"
-        ss += "<tr><td>Task</td><td>"+task["desc"]+"</td></tr>";
-        ss += "</table>\n\n";
-        ss += '" class="outerhighlight">'
+        ss += "<table>";
+        ss += addModifiableField("Task Name","modify_desc",task["desc"]);
+        ss += addModifiableField("Due Date","modify_dueDate",task["dueDate"]);
+        ss += "<td><input onclick='dismissModifedTask()' type='button' value='dismiss'/></td>";
+        ss += "<td><input onclick='submitModifiedTask("+id+")' type='button' value='modify'/></td>";
+        ss += "</tr>";
+        ss += "</table>";
+
+        div.innerHTML = ss;
+        $('body').append(div);
+      }
+
+      function submitModifiedTask(id) {
+        var task = allTasks[id];
+
+        //Update task with new modified information
+        task["desc"] = document.getElementById("modify_desc").value;
+        task["dueDate"] = document.getElementById("modify_dueDate").value;
+        computeExtraTaskData(task);
+
+        //Find and replace the relevant table row
+        $('tr.taskRow').each(function(){
+            var tr = $(this);
+            var rowid = tr.find('td:eq(0)').text();
+            if (task["id"] == rowid) {
+              tr.find('td:eq(0)').parent().replaceWith(
+                writeTaskData(task,task["_depth"],false)
+              );
+            }
+        });
+
+        dismissModifedTask();
+      }
+
+      function dismissModifedTask() {
+        var olddiv = document.getElementById("editTaskForm");
+        if (olddiv != null) {
+          olddiv.parentNode.removeChild(olddiv);
+        }
+      }
+
+      function addModifiableField(title,id,defVal,callback=null) {
+        var cb = "";
+        if (callback != null) {
+          cb = 'onchange="'+callback+'(this.value)"';
+        }
+        var ss = ""
+          +"<tr><td>"+title+"</td><td>"
+          +'<input type="text" value="'
+          +defVal
+          +'" id="'+id+'" '+cb+'"/>'
+          +"</td></tr>";
         return ss;
       }
 
@@ -310,10 +235,10 @@
         var ss = "";
         var color = getTaskColor(task);
         ss += ('<td><div class="indentDiv" style="'
-          +indentText(indent)
-          +'">'
+          +indentTextString(indent)
+          +'" onclick="modifyTask('+task["id"]+')">'
           +'<div class="highlight" style="'
-          +bg(color)
+          +taskBG(color)
           +'">'
         );
         ss += (task['desc']);
@@ -338,27 +263,7 @@
         return ss;
       }
 
-      function getTaskProject(task) {
-        var tp = task['project'];
-        if (tp != "") {
-          return tp;
-        }
-        if (task['parent'] > 0) { //Inherit
-          task['project'] = allTasks[task["parent"]]["project"];
-          return task['project'];
-        }
-        return "default";
-      }
-
-      function getTaskProgress(task) {
-        comp = ( task['done'] == "" ? task['completion'] : "1" );
-        return '<meter value="'+comp+'"></meter>';
-      }
-
       function expandTask(id) {
-        for (var i = 0; i < allTasks[id]["children"].length; ++i) {
-          expandTask(allTasks[id]["children"][i]['id']);
-        }
         $('tr.taskRow').each(function(){
             var tr = $(this);
             var rowid = tr.find('td:eq(0)').text();
@@ -366,6 +271,9 @@
               tr.show();
             }
         });
+        for (var i = 0; i < allTasks[id]["children"].length; ++i) {
+          expandTask(allTasks[id]["children"][i]['id']);
+        }
       }
 
       function collapseTask(id,first=true) {
@@ -401,6 +309,7 @@
       }
 
       function writeTaskData(task,indent=0,recursive=true) {
+        task["_depth"] = indent;
         var ss = "";
         ss += ('<tr class="taskRow">');
           ss += ('<td class="invisible">'+task['id']+'</td>');
@@ -452,51 +361,53 @@
         return ss;
       }
 
-      function computeExtraTaskData() {
-        for (var key in allTasks) {
-          var task = allTasks[key];
+      //TODO: heavily clean up this function
+      function computeExtraTaskData(task) {
+        if (task['completion'] == "") {
+          task['completion'] = "0.00";
+        }
 
-          if (task['completion'] == "") {
-            task['completion'] = "0.00";
-          }
+        task["_tooltip"] = "This task can be done now.";
+        task["_dependencies"] = "";
+        task["_dueDateTime"] = task["dueDate"]+" "+task["dueTime"];
+        task["_schedDateTime"] = task["schedDate"]+" "+task["schedTime"];
 
-          task["_tooltip"] = "This task can be done now.";
-          task["_dependencies"] = "";
-          task["_dueDateTime"] = task["dueDate"]+" "+task["dueTime"];
-          task["_schedDateTime"] = task["schedDate"]+" "+task["schedTime"];
+        task['_available'] = true;
 
-          task['_available'] = true;
-
-          var startDate = parseYmdDate(task['startDate'],false);
-          if (task["done"] != "") {
-            task['completion'] = "1.00";
-            task['_available'] = false;  //Don't need to do finished tasks
-            task["_tooltip"] = "Already done!";
-          } else if (startDate > Date.now()) { //TODO: not guaranteed to have a valid startDate
-            task['_available'] = false;  //Can't do future tasks
-            task["_tooltip"] = "Not available until "+task['startDate']+" at "+task['startTime'];
-          } else if (task["deps"] != "") {
-            var deps = task['deps'].split(",");
-            for (var i = 0; i < deps.length; ++i) {
-              if (! ("_dependents" in allTasks[deps[i]])) {
-                allTasks[deps[i]]["_dependents"] = [];
-              }
-              allTasks[deps[i]]["_dependents"].push(task["id"]);
-              if (task['_available']) {
-                task['_available'] = false;  //Can't do a task with dependencies
-                task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
-              }
-              if (allTasks[deps[i]]["done"] == "") {
-                status = "./images/cross.jpg"
-              } else {
-                status = "./images/check.jpg"
-              }
-              task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
-              +allTasks[deps[i]]["desc"]+"\n";
+        var startDate = parseYmdDate(task['startDate'],false);
+        if (task["done"] != "") {
+          task['completion'] = "1.00";
+          task['_available'] = false;  //Don't need to do finished tasks
+          task["_tooltip"] = "Already done!";
+        } else if (startDate > Date.now()) { //TODO: not guaranteed to have a valid startDate
+          task['_available'] = false;  //Can't do future tasks
+          task["_tooltip"] = "Not available until "+task['startDate']+" at "+task['startTime'];
+        } else if (task["deps"] != "") {
+          var deps = task['deps'].split(",");
+          for (var i = 0; i < deps.length; ++i) {
+            if (! ("_dependents" in allTasks[deps[i]])) {
+              allTasks[deps[i]]["_dependents"] = [];
             }
-            task["_dependencies"] +=  "<tr><td colspan='2'><hr/></td></tr>";
+            allTasks[deps[i]]["_dependents"].push(task["id"]);
+            if (task['_available']) {
+              task['_available'] = false;  //Can't do a task with dependencies
+              task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
+            }
+            if (allTasks[deps[i]]["done"] == "") {
+              status = "./images/cross.jpg"
+            } else {
+              status = "./images/check.jpg"
+            }
+            task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
+            +allTasks[deps[i]]["desc"]+"\n";
           }
+          task["_dependencies"] +=  "<tr><td colspan='2'><hr/></td></tr>";
+        }
+      }
 
+      function computeAllExtraTaskData() {
+        for (var key in allTasks) {
+          computeExtraTaskData(allTasks[key]);
         }
       }
 
@@ -555,7 +466,6 @@
 
       function writeAllTaskData() {
         var ss = "";
-
         ss += ('<table id="taskTable" class="tablesorter">');
         ss += writeTaskHeaders();
         ss += ('<tbody>');
@@ -605,14 +515,8 @@
         return ss;
       }
 
-      function generateHTML () {
-        parseTaskCSV("file:///home/pretzel/workspace/todo-js/data.csv");
-        computeExtraTaskData();
-        document.write(writeAllTaskData());
-      }
-
       function downloadData() {
-        download(generateCSV(),"newdata.csv","text/plain");
+        download(generateCSV(),"_newdata.csv","text/plain");
       }
 
       //From http://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
@@ -661,18 +565,20 @@
           return true;
       }
 
+      function generateHTML () {
+        parseTaskCSV("file:///home/pretzel/workspace/todo-js/data.csv");
+        computeAllExtraTaskData();
+        document.write(writeAllTaskData());
+      }
+
     </script>
-
-</head>
-
-<body>
-  <!-- HTML -->
-    <script>
-      generateHTML();
-    </script>
-</body>
-
-<!-- Finish Loading  -->
-  <!-- <script type="text/javascript"> $(function(){ $("#taskTable").tablesorter(); }); </script> -->
-
+  </head>
+  <body><script>
+    generateHTML();
+    $(document).keyup(function(e) {
+      if (e.keyCode == 27) { // escape key maps to keycode `27`
+        dismissModifedTask();
+      }
+    });
+  </script></body>
 </html>
