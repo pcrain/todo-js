@@ -69,8 +69,8 @@
 
         function getTaskDueDate(task) {
           return task['_dueDateTime'];
-          d = task['dueDate'];
-          return (d != "" ? parseYmdDate(d) : d);
+          // d = task['dueDate'];
+          // return (d != "" ? parseYmdDate(d) : d);
         }
 
         function getTaskDueTime(task) {
@@ -80,8 +80,8 @@
 
         function getTaskSchedDate(task) {
           return task['_schedDateTime'];
-          d = task['schedDate'];
-          return (d != "" ? parseYmdDate(d) : d);
+          // d = task['schedDate'];
+          // return (d != "" ? parseYmdDate(d) : d);
         }
 
         function getTaskSchedTime(task) {
@@ -91,8 +91,8 @@
 
         function getTaskStartDate(task) {
           return task['_startDateTime'];
-          d = task['startDate'];
-          return (d != "" ? parseYmdDate(d) : d);
+          // d = task['startDate'];
+          // return (d != "" ? parseYmdDate(d) : d);
         }
 
         function getTaskStartTime(task) {
@@ -168,6 +168,7 @@
 
           div.innerHTML = ss;
           $('body').append(div);
+          setTimeout(function(){div.className += "onAdd";},10);
         }
 
         function refreshTaskId(id) {
@@ -180,6 +181,7 @@
                 tr.find('td:eq(0)').parent().replaceWith(
                   writeTaskData(task,task["_depth"],false)
                 );
+                return;
               }
           });
         }
@@ -278,7 +280,7 @@
         function writeTaskData(task,indent=0,recursive=true) {
           task["_depth"] = indent;
           var ss = "";
-          ss += ('<tr class="taskRow">');
+          ss += ('<tr class="taskRow onAdd">');
             ss += ('<td class="invisible">'+task['id']+'</td>');
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
@@ -310,21 +312,27 @@
           ss += ('<td class="actiontd">');
           ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
           if (parseInt(task["completion"]) == 1) {
-            ss += ('class="actionicon" src="./images/cross.jpg"></img> ');
+            ss += ('class="actionicon" src="./images/cross.png"></img> ');
           } else {
-            ss += ('class="actionicon" src="./images/check.jpg"></img> ');
+            ss += ('class="actionicon" src="./images/check.png"></img> ');
           }
 
-          if (! task["_collapsed"]) {
-            //Collapse
-            ss += ('<img ');
-            ss += ('onclick="collapseTask('+task['id']+')" ');
-            ss += ('class="actionicon" src="./images/minus.jpg"></img> ');
+          if (task['children'].length > 0) {
+            if (! task["_collapsed"]) {
+              //Collapse
+              ss += ('<img ');
+              ss += ('onclick="collapseTask('+task['id']+')" ');
+              ss += ('class="actionicon" src="./images/minus.png"></img> ');
+            } else {
+              //Expand
+              ss += ('<img ');
+              ss += ('onclick="expandTask('+task['id']+')" ');
+              ss += ('class="actionicon" src="./images/plus.png"></img> ');
+            }
           } else {
-            //Expand
-            ss += ('<img ');
-            ss += ('onclick="expandTask('+task['id']+')" ');
-            ss += ('class="actionicon" src="./images/plus.jpg"></img> ');
+              ss += ('<img ');
+              ss += ('onclick="collapseTask('+task['id']+')" ');
+              ss += ('class="zeroopacity actionicon" src="./images/minus.png"></img> ');
           }
 
           ss += "</td>";
@@ -427,18 +435,33 @@
           refreshTaskId(id);
         }
 
-        function expandTask(id) {
-          allTasks[id]["_collapsed"] = false;
+        function expandTask(id,first=true,recurse=1) {
+          if (recurse == 0) {
+            allTasks[id]["_collapsed"] = true;
+          } else {
+            allTasks[id]["_collapsed"] = false;
+          }
           refreshTaskId(id);
           $('tr.taskRow').each(function(){
               var tr = $(this);
               var rowid = tr.find('td:eq(0)').text();
               if (id == rowid) {
+                //Force transition
+                if (! first) {
+                  tr.hide();
+                  tr.addClass("onCollapse");
+                  tr.removeClass("onAdd");
+                }
                 tr.show();
+                tr.removeClass("onCollapse");
+                tr.addClass("onAdd");
+                // setTimeout(function(){tr.show();},500);
               }
           });
-          for (var i = 0; i < allTasks[id]["children"].length; ++i) {
-            expandTask(allTasks[id]["children"][i]['id']);
+          if (recurse > 0) {
+            for (var i = 0; i < allTasks[id]["children"].length; ++i) {
+              expandTask(allTasks[id]["children"][i]['id'],false,recurse-1);
+            }
           }
         }
 
@@ -452,7 +475,10 @@
                 var tr = $(this);
                 var rowid = tr.find('td:eq(0)').text();
                 if (id == rowid) {
-                  tr.hide();
+                  tr.removeClass("onAdd");
+                  tr.addClass("onCollapse");
+                  setTimeout(function(){tr.hide();},500);
+                  // tr.hide();
                 }
             });
           } else {
@@ -636,9 +662,9 @@
                 task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
               }
               if (parseInt(allTasks[deps[i]]["completion"]) == 1) {
-                status = "./images/check.jpg";
+                status = "./images/check.png";
               } else {
-                status = "./images/cross.jpg";
+                status = "./images/cross.png";
               }
               task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
               +allTasks[deps[i]]["desc"]+"\n";

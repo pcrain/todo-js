@@ -21,8 +21,20 @@ th {
   padding : 0pt 10pt 0pt 10pt;
   height : 24pt;
 }
+#taskTable tr {
+  transition: opacity 0.5s ease;
+}
+#taskTable tr.onAdd {
+  opacity: 1;
+  /*transition: opacity 1.0s ease;*/
+}
+#taskTable tr.onCollapse {
+  opacity: 0;
+  /*transition: opacity 1.0s ease;*/
+}
 #taskTable td {
   padding : 0pt 0 1pt 10pt;
+  /*height: 1pt;*/
   /*border : 1px solid black;*/
 }
 .highlight {
@@ -81,48 +93,57 @@ meter::-moz-meter-bar { /* Firefox Pseudo Class */
   white-space: pre-wrap;
   background: rgba(0,0,0,0.5);
   max-height: 0;
+  /*max-width: 0;*/
   overflow: hidden;
   /*transition: all 0.5s ease;*/
-  transition: max-height 3s ease;
   /*transition: max-height 1s ease;*/
 }
 
 .highlight:hover .tooltipclass {
-  max-height: 1000pt;
+  max-height: 100%;
+  /*max-width: 1000pt;*/
   opacity: 1;
+  transition: max-height 3s ease, opacity 1s ease;
 }
 
 div#editTaskForm {
   position: fixed;
-  opacity: 1;
 
   display: block;
   text-align: center;
 
-  /* customizable */
-  /*padding: 10px;*/
   color: #FFF;
-  border-radius: 100px;
+  padding: 20pt;
+  border-radius: 40pt;
   box-shadow: 2px 2px 1px black;
-  /*margin-top: 0px;*/
-  /*margin-left: 20px;*/
   white-space: pre-wrap;
   background: rgba(0,0,0,0.5);
   overflow: hidden;
-  /*transition: all 0.5s ease;*/
-  /*transition: max-height 1s ease;*/
 
   position: fixed;
-  /*width: 100%;*/
-  /*height: 100%;*/
-  left: 25%;
-  top: 25%;
-  width: 50%;
-  height: 50%;
-  /*margin-left: auto;*/
-  /*margin-top: -225pt;*/
-  /*margin-right: 0%;*/
+  transform: translate(-50%, -50%);
+
+  left: 100%;
+  top: 0%;
+  opacity: 0;
+  max-height: 0;
 }
+
+ div#editTaskForm.onAdd {
+    left: 50%;
+    top: 50%;
+    opacity: 1;
+    max-height: 100%;
+    transition:
+      left 0.5s ease,
+      top 0.5s ease,
+      opacity 1.0s ease,
+      max-height 1.0s ease;
+ }
+
+ div#editTaskForm td {
+  text-align: right;
+ }
 
 #editTaskForm table {
   display: inline-block;
@@ -137,15 +158,17 @@ div#editTaskForm {
 }
 
 .actionicon {
-  height: 16pt;
+  height: 14pt;
   margin: 0;
   padding: 0;
+  cursor: pointer;
 }
 
 .tooltipicon {
-  height: 12pt;
+  height: 10pt;
   margin: 2;
   padding: 2;
+  /*cursor: pointer;*/
 }
 
 #taskTable .actiontd {
@@ -155,6 +178,10 @@ div#editTaskForm {
 
 .invisible {
   display: none;
+}
+
+.zeroopacity {
+  opacity: 0;
 }
 
 .sortableHeader {
