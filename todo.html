@@ -90,6 +90,7 @@
         }
 
         function getTaskStartDate(task) {
+          return task['_startDateTime'];
           d = task['startDate'];
           return (d != "" ? parseYmdDate(d) : d);
         }
@@ -245,18 +246,12 @@
         function writeTaskHeaders() {
           var ss = "";
           ss += ('<thead><tr>');
-          // write('<th>ID</th>');
           ss += ('<th class="exportButton" onclick="downloadData()">EXPORT</th>');
-          // ss += ('<th>Task</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'id',true"+')">Task</th>');
-          // write('<th>Project</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion'"+')">Progress</th>');
-          // write('<th>Start Date</th>');
-          // write('<th>Start Time</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime'"+')">Due Date</th>');
-          // write('<th>Due Time</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_schedDateTime'"+')">Sched. Date</th>');
-          // write('<th>Sched. Time</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_startDateTime'"+')">Start Date</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'estTime'"+')">Est. Time</th>');
           ss += ('</tr></thead>');
           return ss;
@@ -287,14 +282,10 @@
             ss += ('<td class="invisible">'+task['id']+'</td>');
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
-            // write('<td>'+getTaskProject(task)+'</td>');
             ss += ('<td>'+getTaskProgress(task)+'</td>');
-            // write('<td>'+getTaskStartDate(task)+'</td>');
-            // write('<td>'+getTaskStartTime(task)+'</td>');
             ss += ('<td>'+getTaskDueDate(task)+'</td>');
-            // write('<td>'+getTaskDueTime(task)+'</td>');
             ss += ('<td>'+getTaskSchedDate(task)+'</td>');
-            // write('<td>'+getTaskSchedTime(task)+'</td>');
+            ss += ('<td>'+getTaskStartDate(task)+'</td>');
             ss += writeTaskEstimatedTime(task);
           ss += ('</tr>');
           if (recursive) {
@@ -379,29 +370,45 @@
           ntasks = Object.keys(allTasks).length;
           var writtenIDs = {};
           for (var i = 0; i < ntasks; ++i) {
-            var minval = false;
+            var minval = "";
             var minid = -1;
             for (var key in allTasks) {
+              //Skip children if we're recursing
               if (recurse && allTasks[key]['parent'] != "") {
                 continue;
               }
-              if (allTasks[key]['id'] in writtenIDs) {
+              //Skip things we've already written
+              if (key in writtenIDs) {
                 continue;
               }
+              //Automatically addthe first nonwritten value
+              if (minid == -1) {
+                minval = allTasks[key][sortKey];
+                minid = key;
+                continue;
+              }
+              //Automatically replace with the first non-null value
+              if (taskVal != "" && taskVal != " ") {
+                if (minval == "" || minval == " ") {
+                  minval = allTasks[key][sortKey];
+                  minid = key;
+                  continue;
+                }
+              }
+              //Compare with the new value
               var taskVal = allTasks[key][sortKey];
               if (taskVal.localeCompare(minval) == -1) {
-                if ((taskVal == "" || taskVal == " ") && minid != -1)
+                if (taskVal == "" || taskVal == " ")
                   continue;
                 minval = taskVal;
-                minid = allTasks[key];
+                minid = key;
               }
             }
-            // alert(sortKey+" for "+minid["id"]+" is "+minval);
             if (minid == -1) {
               break;
             }
-            writtenIDs[minid["id"]] = true;
-            trows += writeTaskData(minid,0,recurse);
+            writtenIDs[minid] = true;
+            trows += writeTaskData(allTasks[minid],0,recurse);
           }
           $("#taskTable tbody tr").remove();
           document.getElementById("taskTable").innerHTML = trows;
@@ -604,6 +611,7 @@
           task["_dependencies"] = "";
           task["_dueDateTime"] = task["dueDate"]+" "+task["dueTime"];
           task["_schedDateTime"] = task["schedDate"]+" "+task["schedTime"];
+          task["_startDateTime"] = task["startDate"]+" "+task["startTime"];
 
           task['_available'] = true;
 

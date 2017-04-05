@@ -1,7 +1,7 @@
 id|parent|deps|completion|desc|project|dueDate|dueTime|schedDate|schedTime|startDate|startTime|color|estTime|priority
-1|||0.1|Javascript ToDo ToDo!|todo|2017/05/01|12_00_00|2017/05/01|00_00_00|||green|100h|0
-2|1|||UI||2017/05/02||||||red||
-3|2|||Improve colors on progress bar||2017/06/01|14_00_00|||||||
+1|||0.1|Javascript ToDo ToDo!|todo|2017/05/01|12_00_00|||||green||0
+2|1|||UI||2017/05/02||||||red|100h|
+3|2|||Improve colors on progress bar||2017/06/01|14_00_00|2017/05/01|00_00_00|||||
 4|2||1|Add tree structure to tasks||2016/05/01|15_00_00|||||||
 7|2||1|Improve displays for date / time||2019/05/01|11_00_00|||||||
 5|1|||Functionality||2017/05/11|10_00_00|||||blue||
