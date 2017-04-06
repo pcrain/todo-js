@@ -141,7 +141,35 @@
         }
 
         function newSubTask(id) {
-          alert("adding "+id);
+          if (! confirm("Add subtask for '"+allTasks[id]['desc']+"'?")) {
+            return;
+          }
+
+          var parentTask = allTasks[id];
+          var maxId = 0;
+          for(key in allTasks) {
+            var pi = parseInt(allTasks[key]["id"]);
+            if (pi > maxId) {
+              maxId = pi;
+            }
+          }
+          maxId += 1;
+
+          //Clone the parent task and reset some attributes
+          var newTask = jQuery.extend(true, {}, allTasks[id]);
+          allTasks[""+maxId.toString()] = newTask;
+          newTask["id"] = maxId.toString();
+          newTask["desc"] = "Task "+newTask["id"];
+          newTask["parent"] = id;
+          newTask["children"] = [];
+          newTask["_depth"] = allTasks[id]["_depth"]+1;
+          allTasks[id]["children"].push(newTask);
+
+          //Open modify task dialogue
+          modifyTask(maxId);
+
+          //Redraw the tasks while we're waiting
+          rewriteAllTasks();
         }
 
         //TODO: finish this
@@ -348,6 +376,16 @@
             ss += ('class="actionicon" src="./images/check-off.png"></img> ');
           }
 
+          //Remove task
+          ss += ('<img ');
+          ss += ('onclick="deleteTask('+task['id']+')" ');
+          ss += ('class="actionicon" src="./images/deletetask.png"></img> ');
+
+          //New subtask
+          ss += ('<img ');
+          ss += ('onclick="newSubTask('+task['id']+')" ');
+          ss += ('class="actionicon" src="./images/newtask.png"></img> ');
+
           if (task['children'].length > 0) {
             if (! task["_collapsed"]) {
               //Collapse
@@ -365,16 +403,6 @@
               ss += ('onclick="collapseTask('+task['id']+')" ');
               ss += ('class="zeroopacity actionicon" src="./images/minus.png"></img> ');
           }
-
-          //New subtask
-          ss += ('<img ');
-          ss += ('onclick="newSubTask('+task['id']+')" ');
-          ss += ('class="actionicon" src="./images/newtask.png"></img> ');
-
-          //Remove task
-          ss += ('<img ');
-          ss += ('onclick="deleteTask('+task['id']+')" ');
-          ss += ('class="actionicon" src="./images/deletetask.png"></img> ');
 
           ss += "</td>";
           return ss;
@@ -410,6 +438,19 @@
           }
           ss += ('</td>');
           return ss;
+        }
+
+        function rewriteAllTasks() {
+          var trows = "";
+          trows += writeTaskHeaders();
+          for (key in allTasks) {
+            if (allTasks[key]["parent"] != "") {
+              continue;
+            }
+            trows += writeTaskData(allTasks[key],0,true);
+          }
+          $("#taskTable tbody tr").remove();
+          document.getElementById("taskTable").innerHTML = trows;
         }
 
         function sortTasks(sortKey,recurse=false) {
@@ -477,6 +518,7 @@
         }
 
         function expandTask(id,first=true,recurse=false) {
+          // alert("expand "+id);
           if (first || recurse) {
             allTasks[id]["_collapsed"] = false;
           } else {
@@ -506,6 +548,7 @@
         }
 
         function collapseTask(id,first=true) {
+          // alert("collapse "+id);
           if (first) {
             allTasks[id]["_collapsed"] = true;
           }

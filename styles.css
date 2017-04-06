@@ -212,7 +212,7 @@ div#editTaskForm {
 .exportButton {
   cursor: pointer;
   border-radius: 20pt;
-  background: rgba(255,255,255,1);
-  background: radial-gradient(ellipse, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 70%);
+  /*background: rgba(255,255,255,1);*/
+  /*background: radial-gradient(ellipse, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 70%);*/
   color: red;
 }
