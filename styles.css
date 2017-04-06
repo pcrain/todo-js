@@ -175,8 +175,8 @@ div#editTaskForm {
   margin: 0;
   padding: 0;
   cursor: pointer;
-  border-radius: 100pt;
-  background-color: white;
+  /*border-radius: 100pt;*/
+  /*background-color: white;*/
 }
 
 .tooltipicon {

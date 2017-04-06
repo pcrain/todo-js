@@ -307,7 +307,31 @@
         function writeTaskHeaders() {
           var ss = "";
           ss += ('<thead><tr>');
-          ss += ('<th class="exportButton" onclick="downloadData()">EXPORT</th>');
+          // ss += ('<th class="exportButton" onclick="downloadData()">')
+          ss += ('<th>')
+
+            //Download
+            ss += ('<img ');
+            ss += ('onclick="downloadData()" ');
+            // ss += ('onclick="downloadData('+task['id']+')" ');
+            ss += ('class="actionicon" src="./images/download.png"></img> ');
+
+            //Refresh
+            ss += ('<img ');
+            ss += ('onclick="rewriteAllTasks()" ');
+            ss += ('class="actionicon" src="./images/refresh.png"></img> ');
+
+            //Global Collapse
+            ss += ('<img ');
+            ss += ('onclick="collapseAllTasks()" ');
+            ss += ('class="actionicon" src="./images/minus-all.png"></img> ');
+
+            //Global Expand
+            ss += ('<img ');
+            ss += ('onclick="expandAllTasks()" ');
+            ss += ('class="actionicon" src="./images/plus-all.png"></img> ');
+
+          ss += ('</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'id',true"+')">Task</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion'"+')">Progress</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime'"+')">Due Date</th>');
@@ -517,6 +541,16 @@
           refreshTaskId(id);
         }
 
+        function expandAllTasks() {
+          for (var key in allTasks) {
+            if (allTasks[key]["parent"] == "") {
+              allTasks[key]["_collapsed"] = false;
+              refreshTaskId(key);
+              expandTask(key,true,true);
+            }
+          }
+        }
+
         function expandTask(id,first=true,recurse=false) {
           // alert("expand "+id);
           if (first || recurse) {
@@ -547,13 +581,23 @@
           }
         }
 
-        function collapseTask(id,first=true) {
+        function collapseAllTasks() {
+          for (var key in allTasks) {
+            if (allTasks[key]["parent"] == "") {
+              allTasks[key]["_collapsed"] = true;
+              refreshTaskId(key);
+              collapseTask(key,true,true);
+            }
+          }
+        }
+
+        function collapseTask(id,first=true,recurse=false) {
           // alert("collapse "+id);
-          if (first) {
+          if (recurse || first) {
             allTasks[id]["_collapsed"] = true;
           }
           for (var i = 0; i < allTasks[id]["children"].length; ++i) {
-            collapseTask(allTasks[id]["children"][i]['id'],false);
+            collapseTask(allTasks[id]["children"][i]['id'],false,recurse);
           }
           if(!first) {
             $('tr.taskRow').each(function(){
@@ -565,7 +609,8 @@
                   setTimeout(function(){tr.hide();},500);
                 }
             });
-          } else {
+          }
+          else {
             refreshTaskId(id);
           }
         }
