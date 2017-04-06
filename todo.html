@@ -140,6 +140,37 @@
           return ss;
         }
 
+        function newSubTask(id) {
+          alert("adding "+id);
+        }
+
+        //TODO: finish this
+        function deleteTask(id,confirmDelete=true) {
+          $('tr.taskRow').each(function(){
+            var tr = $(this);
+            var rowid = tr.find('td:eq(0)').text();
+            if (id == rowid) {
+              if (!confirmDelete || confirm("Delete task '"+allTasks[id]['desc']+"' add all children?")) {
+                for (var j = allTasks[id]["children"].length -1; j >= 0; --j ) {
+                  deleteTask(allTasks[id]["children"][j]["id"],false);
+                }
+                tr.remove();
+                if(parent in allTasks[id]) {
+                  parent = allTasks[allTasks[id]["parent"]];
+                  for (var j = 0; j < parent["children"].length; ++j) {
+                    if (parent["children"][j]["id"] == id) {
+                      parent["children"].splice(j,1);
+                      break;
+                    }
+                  }
+                }
+                delete allTasks[id];
+              }
+              return;
+            }
+          });
+        }
+
         function modifyTask(id) {
           dismissModifedTask();
           var task = allTasks[id];
@@ -312,9 +343,9 @@
           ss += ('<td class="actiontd">');
           ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
           if (parseInt(task["completion"]) == 1) {
-            ss += ('class="actionicon" src="./images/cross.png"></img> ');
-          } else {
             ss += ('class="actionicon" src="./images/check.png"></img> ');
+          } else {
+            ss += ('class="actionicon" src="./images/check-off.png"></img> ');
           }
 
           if (task['children'].length > 0) {
@@ -334,6 +365,16 @@
               ss += ('onclick="collapseTask('+task['id']+')" ');
               ss += ('class="zeroopacity actionicon" src="./images/minus.png"></img> ');
           }
+
+          //New subtask
+          ss += ('<img ');
+          ss += ('onclick="newSubTask('+task['id']+')" ');
+          ss += ('class="actionicon" src="./images/newtask.png"></img> ');
+
+          //Remove task
+          ss += ('<img ');
+          ss += ('onclick="deleteTask('+task['id']+')" ');
+          ss += ('class="actionicon" src="./images/deletetask.png"></img> ');
 
           ss += "</td>";
           return ss;

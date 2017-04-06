@@ -48,6 +48,19 @@ th {
   background-color: lightgray;
   background-blend-mode: multiply;
   cursor: help;
+  overflow: hidden;
+
+  /* Don't use these; disables tooltip */
+    /*backface-visibility: hidden;*/
+    /*transform: translate3d(0, 0, 0);*/
+
+  transition: all 0.75s ease;
+    margin: 0pt -100pt;
+    /*transform: rotate(30deg);*/
+}
+tr.onAdd .highlight {
+  /*transform: rotate(0deg);*/
+  margin: 0pt;
 }
 meter::-moz-meter-bar { /* Firefox Pseudo Class */
   /*background: red;*/
@@ -162,6 +175,8 @@ div#editTaskForm {
   margin: 0;
   padding: 0;
   cursor: pointer;
+  border-radius: 100pt;
+  background-color: white;
 }
 
 .tooltipicon {
@@ -169,6 +184,8 @@ div#editTaskForm {
   margin: 2;
   padding: 2;
   /*cursor: pointer;*/
+  border-radius: 100pt;
+  background-color: white;
 }
 
 #taskTable .actiontd {
