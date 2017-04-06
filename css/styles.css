@@ -22,6 +22,7 @@ th {
   height : 24pt;
 }
 #taskTable tr {
+  /*will-change: opacity;*/
   transition: opacity 0.5s ease;
 }
 #taskTable tr.onAdd {
@@ -54,7 +55,8 @@ th {
     /*backface-visibility: hidden;*/
     /*transform: translate3d(0, 0, 0);*/
 
-  transition: all 0.75s ease;
+  /*will-change: margin, opacity;*/
+  transition: margin 0.75s ease;
     margin: 0pt -100pt;
     /*transform: rotate(30deg);*/
 }

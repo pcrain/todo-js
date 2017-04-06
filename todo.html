@@ -2,14 +2,34 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="styles.css">
-    <script type="text/javascript" src="jquery-3.2.0.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/jquery-ui.timepicker.css">
+    <script type="text/javascript" src="js/jquery-3.2.0.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.timepicker.js"></script>
     <script>
       // Global Variables
         var fields = [];
         var allTasks = {};
+        var madeChanges = false;
 
       // Formatting methods
+
+        function setChangesMade() {
+          if (! madeChanges) {
+            madeChanges = true;
+            $(window).bind('beforeunload', function(){ return 'Leave without saving?'; });
+          }
+        }
+
+        function unsetChangesMade() {
+          if (madeChanges) {
+            madeChanges = false;
+            $(window).unbind('beforeunload');
+            // window.onbeforeunload = null;
+          }
+        }
 
         function indentTextString(i)    {
           return 'padding: 0 0 0 '+(i*20).toString()+'px;';
@@ -145,7 +165,6 @@
             return;
           }
 
-          var parentTask = allTasks[id];
           var maxId = 0;
           for(key in allTasks) {
             var pi = parseInt(allTasks[key]["id"]);
@@ -156,14 +175,23 @@
           maxId += 1;
 
           //Clone the parent task and reset some attributes
-          var newTask = jQuery.extend(true, {}, allTasks[id]);
+          var parentTask = allTasks[id];
+          setChangesMade();
+          var newTask = jQuery.extend(true, {}, parentTask);
           allTasks[""+maxId.toString()] = newTask;
+          for(var key in newTask) {
+            newTask[key] = "";
+          }
           newTask["id"] = maxId.toString();
           newTask["desc"] = "Task "+newTask["id"];
           newTask["parent"] = id;
           newTask["children"] = [];
-          newTask["_depth"] = allTasks[id]["_depth"]+1;
-          allTasks[id]["children"].push(newTask);
+          newTask["dueDate"] = parentTask["dueDate"];
+          newTask["dueTime"] = parentTask["dueTime"];
+          newTask["startDate"] = parentTask["startDate"];
+          newTask["startTime"] = parentTask["startTime"];
+          newTask["_depth"] = parentTask["_depth"]+1;
+          parentTask["children"].push(newTask);
 
           //Open modify task dialogue
           modifyTask(maxId);
@@ -183,7 +211,7 @@
                   deleteTask(allTasks[id]["children"][j]["id"],false);
                 }
                 tr.remove();
-                if(parent in allTasks[id]) {
+                if("parent" in allTasks[id] && allTasks[id]["parent"] != "") {
                   parent = allTasks[allTasks[id]["parent"]];
                   for (var j = 0; j < parent["children"].length; ++j) {
                     if (parent["children"][j]["id"] == id) {
@@ -192,11 +220,33 @@
                     }
                   }
                 }
+                setChangesMade();
                 delete allTasks[id];
+                // alert("delete "+id);
               }
               return;
             }
           });
+        }
+
+        function addDatePicker(elementId) {
+          var id = "#"+elementId;
+          $( id ).datepicker({
+            showOtherMonths: true, selectOtherMonths: true, dateFormat: "yy/mm/dd"
+          });
+          //Disable manual input
+          $( id ).keypress(function(event) { event.preventDefault(); return false; });
+        }
+
+        function addTimePicker(elementId) {
+          var id = "#"+elementId;
+          $( id ).timepicker({
+            onSelect: (function(time, inst) {
+              $('#modify_dueTime').val(time+"_00");
+            }), timeSeparator: '_'
+          });
+          //Disable manual input
+          $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
 
         function modifyTask(id) {
@@ -227,7 +277,19 @@
 
           div.innerHTML = ss;
           $('body').append(div);
-          setTimeout(function(){div.className += "onAdd";},10);
+          //Focus on first textbox
+            $("input:text").focus(function() { $(this).select(); } );
+            document.getElementById("modify_desc").focus();
+          //Add date pickers
+            addDatePicker("modify_dueDate");
+            addDatePicker("modify_schedDate");
+            addDatePicker("modify_startDate");
+          //Add time pickers
+            addTimePicker('modify_dueTime');
+            addTimePicker('modify_schedTime');
+            addTimePicker('modify_startTime');
+          //Add att timeout for visibility
+            setTimeout(function(){div.className += "onAdd";},10);
         }
 
         function refreshTaskId(id) {
@@ -249,6 +311,7 @@
           var task = allTasks[id];
 
           //Update task with new modified information
+          setChangesMade();
           task["desc"] = document.getElementById("modify_desc").value;
           task["dueDate"] = document.getElementById("modify_dueDate").value;
           task["dueTime"] = document.getElementById("modify_dueTime").value;
@@ -332,12 +395,12 @@
             ss += ('class="actionicon" src="./images/plus-all.png"></img> ');
 
           ss += ('</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'id',true"+')">Task</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion'"+')">Progress</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime'"+')">Due Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_schedDateTime'"+')">Sched. Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_startDateTime'"+')">Start Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'estTime'"+')">Est. Time</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'desc',false"+')">Task</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion',false"+')">Progress</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime',false"+')">Due Date</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_schedDateTime',false"+')">Sched. Date</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_startDateTime',false"+')">Start Date</th>');
+          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'estTime',false"+')">Est. Time</th>');
           ss += ('</tr></thead>');
           return ss;
         }
@@ -537,6 +600,7 @@
         }
 
         function updateTask(id,key,value) {
+          setChangesMade();
           allTasks[id][key] = value;
           refreshTaskId(id);
         }
@@ -618,11 +682,10 @@
       // CSV saving / loading
 
         //Read in a todo-data CSV from the specified file and store it in allTasks
-        function parseTaskCSV(file) {
+        function parseTaskCSV(file,backupfile) {
           var rawFile = new XMLHttpRequest();
-          rawFile.open("GET", file, false);
           rawFile.onreadystatechange = function () {
-            if(rawFile.readyState === 4) {
+          if(rawFile.readyState === 4) {
               if(rawFile.status === 200 || rawFile.status == 0) {
                 var allText = rawFile.responseText.split('\n');
                 var toWrite = "";
@@ -658,7 +721,13 @@
               }
             }
           }
-          rawFile.send(null);
+          rawFile.open("GET", file, false);
+          try {
+            rawFile.send(null);
+          } catch(exception) {
+            rawFile.open("GET", backupfile, false);
+            rawFile.send(null);
+          }
         }
 
 
@@ -695,6 +764,7 @@
 
           for (var j = 0; j < task["children"].length; j++) {
             child = allTasks[task["children"][j]["id"]];
+            // if (child == undefined) continue;
             ss += generateCSVRow(child);
           }
 
@@ -702,7 +772,7 @@
         }
 
         function downloadData() {
-          download(generateCSV(),"_newdata.csv","text/plain");
+          download(generateCSV(),"_mydata.csv","text/plain");
         }
 
         //From http://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
@@ -814,8 +884,7 @@
         }
 
         function generateHTML () {
-          // parseTaskCSV("file:///home/pretzel/workspace/todo-js/_newdata.csv");
-          parseTaskCSV("file:///home/pretzel/workspace/todo-js/data.csv");
+          parseTaskCSV("./_mydata.csv","./data.csv");
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
         }
@@ -823,9 +892,18 @@
   </head>
   <body><script>
     generateHTML();
+    //Keycodes: https://css-tricks.com/snippets/javascript/javascript-keycodes/
     $(document).keyup(function(e) {
       if (e.keyCode == 27) { // escape key maps to keycode `27`
         dismissModifedTask();
+      } else if (e.keyCode == 83) { // s
+        // alert(e.target.tagName);
+        if(e.target.tagName == "BODY") {
+          downloadData();
+          unsetChangesMade();
+        }
+      } else if (e.keyCode == 82) { // r
+        rewriteAllTasks();
       }
     });
   </script></body>
