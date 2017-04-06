@@ -5,9 +5,11 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/jquery-ui.css">
     <link rel="stylesheet" href="css/jquery-ui.timepicker.css">
+    <link rel="stylesheet" href="css/chosen.min.css">
     <script type="text/javascript" src="js/jquery-3.2.0.js"></script>
     <script type="text/javascript" src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/jquery.ui.timepicker.js"></script>
+    <script type="text/javascript" src="js/chosen.jquery.min.js"></script>
     <script>
       // Global Variables
         var fields = [];
@@ -249,6 +251,32 @@
           $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
 
+        function addTaskPicker(elementId) {
+          // return;
+          var id = "#"+elementId;
+          // echo '<select class=chosen-select name="p1tag">';
+          // for ($i = 0; $i < count($allplayers); $i ++) {
+          //   echo "<option value='".$allplayers[$i]['player_id']."'>" . $allplayers[$i]['unique_tag'] . "</option>";
+          // }
+          $(id).chosen({
+            enable_split_word_search: false,
+            no_results_text: "Task not found!",
+            width: "100%",
+            search_contains : true,
+            max_shown_results : 8,
+            placeholder_text_multiple: "No Dependencies"
+          });
+          $(id).on('change', function(evt, params) {
+            alert($(id).val());
+            // for (var p in $(id)) {
+            //   alert(p+": "+$(id)[p]);
+            // }
+            // for (var p in params)
+            //   alert(p+": "+params[p]);
+            // do_something(evt, params);
+          });
+        }
+
         function modifyTask(id) {
           dismissModifedTask();
           var task = allTasks[id];
@@ -268,7 +296,7 @@
             ss += addModifiableField("Color","modify_color",task["color"]);
             ss += addModifiableField("Est. Time","modify_estTime",task["estTime"]);
             ss += addModifiableField("Parent","modify_parent",task["parent"]);
-            ss += addModifiableField("Dependencies","modify_deps",task["deps"]);
+            ss += addSelectField("Dependencies","modify_deps",task["deps"]);
             ss += addModifiableField("Completion","modify_completion",task["completion"]);
           ss += "<td><input onclick='dismissModifedTask()' type='button' value='dismiss'/></td>";
           ss += "<td><input onclick='submitModifiedTask("+id+")' type='button' value='modify'/></td>";
@@ -288,6 +316,8 @@
             addTimePicker('modify_dueTime');
             addTimePicker('modify_schedTime');
             addTimePicker('modify_startTime');
+          //Add task pickers
+            addTaskPicker('modify_deps');
           //Add att timeout for visibility
             setTimeout(function(){div.className += "onAdd";},10);
         }
@@ -323,7 +353,14 @@
           task["color"] = document.getElementById("modify_color").value;
           task["estTime"] = document.getElementById("modify_estTime").value;
           task["parent"] = document.getElementById("modify_parent").value;
-          task["deps"] = document.getElementById("modify_deps").value;
+
+          //Convert dependencies to comma separated format
+          task["deps"] = "";
+          rawdeps = $("#modify_deps").val();
+          for (d in rawdeps) {
+            task["deps"] += ((task["deps"]=="") ? "" : ",")+rawdeps[d];
+          }
+
           task["completion"] = document.getElementById("modify_completion").value;
           computeExtraTaskData(task);
 
@@ -340,6 +377,26 @@
           }
         }
 
+        function addSelectField(title,id,defVal) {
+          var deps = defVal.split(",");
+          var ss = ""
+            +"<tr><td>"+title+"</td><td>"
+            +'<select multiple class="chosen-select" '
+            +' id="'+id+'">';
+
+          for(var key in allTasks) {
+            if(deps.indexOf(key) == -1)
+              ss += "<option value='"+key+"'>" + allTasks[key]['desc'] + "</option>";
+            else
+              ss += "<option selected value='"+key+"'>" + allTasks[key]['desc'] + "</option>";
+          }
+
+          ss = ss
+            +'</select>'
+            +"</td></tr>";
+          return ss;
+        }
+
         function addModifiableField(title,id,defVal,callback=null) {
           var cb = "";
           if (callback != null) {
@@ -349,7 +406,7 @@
             +"<tr><td>"+title+"</td><td>"
             +'<input type="text" value="'
             +defVal
-            +'" id="'+id+'" '+cb+'"/>'
+            +'" id="'+id+'" '+cb+'"></input>'
             +"</td></tr>";
           return ss;
         }
@@ -616,11 +673,17 @@
         }
 
         function expandTask(id,first=true,recurse=false) {
-          // alert("expand "+id);
+          //If we're recursively expanding or the first element in a tree to be expanded
           if (first || recurse) {
-            allTasks[id]["_collapsed"] = false;
-          } else {
-            // allTasks[id]["_collapsed"] = false;
+            //If we're not a completed tasked, we can expand
+            if  (! parseInt(allTasks[id]["completion"]) == 1)
+              allTasks[id]["_collapsed"] = false;
+            //Even if we're completed, if we're the first element selected, we can expand
+            else if (first)
+              allTasks[id]["_collapsed"] = false;
+            //Otherwise, we can't expand
+            else
+              allTasks[id]["_collapsed"] = true;
           }
           refreshTaskId(id);
           $('tr.taskRow').each(function(){
@@ -638,9 +701,16 @@
                 tr.addClass("onAdd");
               }
           });
+          //If the parent isn't still collapsed, expand the children
           if (! allTasks[id]["_collapsed"]) {
             for (var i = 0; i < allTasks[id]["children"].length; ++i) {
               expandTask(allTasks[id]["children"][i]['id'],false,recurse);
+            }
+          }
+          //If the parent's collapsed, but we're told to go recursive, collapse all children
+          else if (recurse) {
+            for (var i = 0; i < allTasks[id]["children"].length; ++i) {
+              collapseTask(allTasks[id]["children"][i]['id'],false,recurse);
             }
           }
         }
@@ -887,6 +957,7 @@
           parseTaskCSV("./_mydata.csv","./data.csv");
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
+          // expandAllTasks();
         }
     </script>
   </head>
