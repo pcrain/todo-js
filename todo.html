@@ -763,7 +763,8 @@
                   if (allText[line].length < 1) {
                     continue;
                   }
-                  split = allText[line].split('|');
+                  split = allText[line].split('\t');
+                  // alert(split);
                   if (split[0] == "") { //Ignore if no id
                     continue;
                   }
@@ -779,6 +780,9 @@
                   taskData["children"] = [];
                   for (var i = 0; i < split.length; i++) {
                     taskData[fields[i]] = split[i];
+                  }
+                  for (var i = split.length; i < fields.length; i++) {
+                    taskData[fields[i]] = "";
                   }
                   allTasks[taskData["id"]] = taskData;
                 }
@@ -802,7 +806,7 @@
 
 
         function generateCSV() {
-          var ss = "id|parent|deps|completion|desc|project|dueDate|dueTime|schedDate|schedTime|startDate|startTime|color|estTime|priority\n";
+          var ss = "id\tparent\tdeps\tcompletion\tdesc\tproject\tdueDate\tdueTime\tschedDate\tschedTime\tstartDate\tstartTime\tcolor\testTime\tpriority\n";
           for (var key in allTasks) {
             var task = allTasks[key];
             if (task["parent"] == "") {
@@ -815,20 +819,20 @@
 
         function generateCSVRow(task) {
           var ss = "";
-          ss += task['id']+"|";
-          ss += task['parent']+"|";
-          ss += task['deps']+"|";
-          ss += task['completion']+"|";
-          ss += task['desc']+"|";
-          ss += task['project']+"|";
-          ss += task['dueDate']+"|";
-          ss += task['dueTime']+"|";
-          ss += task['schedDate']+"|";
-          ss += task['schedTime']+"|";
-          ss += task['startDate']+"|";
-          ss += task['startTime']+"|";
-          ss += task['color']+"|";
-          ss += task['estTime']+"|";
+          ss += task['id']+"\t";
+          ss += task['parent']+"\t";
+          ss += task['deps']+"\t";
+          ss += task['completion']+"\t";
+          ss += task['desc']+"\t";
+          ss += task['project']+"\t";
+          ss += task['dueDate']+"\t";
+          ss += task['dueTime']+"\t";
+          ss += task['schedDate']+"\t";
+          ss += task['schedTime']+"\t";
+          ss += task['startDate']+"\t";
+          ss += task['startTime']+"\t";
+          ss += task['color']+"\t";
+          ss += task['estTime']+"\t";
           ss += task['priority'];
           ss += "\n";
 
@@ -842,7 +846,7 @@
         }
 
         function downloadData() {
-          download(generateCSV(),"_mydata.csv","text/plain");
+          download(generateCSV(),"_mydata.tsv","text/plain");
         }
 
         //From http://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
@@ -895,6 +899,9 @@
 
         //TODO: heavily clean up this function
         function computeExtraTaskData(task) {
+
+          // alert(JSON.stringify(task,null,2));
+
           if (task['completion'] == "") {
             task['completion'] = "0";
           }
@@ -954,7 +961,7 @@
         }
 
         function generateHTML () {
-          parseTaskCSV("./_mydata.csv","./data.csv");
+          parseTaskCSV("./_mydata.tsv","./data.tsv");
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
           // expandAllTasks();
