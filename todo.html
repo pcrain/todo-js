@@ -52,9 +52,11 @@
         }
 
         function unparseYmdDate(date) {
+          d = date.getDate();
+          d = (d < 10) ? "0"+d.toString() : d.toString();
           m = date.getMonth()+1;
           m = (m < 10) ? "0"+m.toString() : m.toString();
-          return date.getFullYear()+"/"+m+"/"+date.getDate();
+          return date.getFullYear()+"/"+m+"/"+d;
         }
 
 
@@ -73,17 +75,17 @@
 
         function getTaskColor(task) {
           if (parseInt(task["completion"]) == 1) {
-            task['_color'] = "gray"
+            task['_color'] = "black";
             return task['_color'];
           }
 
           if (! task['_available']) {
-            task['_color'] = "gray"
+            task['_color'] = "gray";
             return task['_color'];
           }
 
           if (task['color'] != "") {
-            task['_color'] = task['color']
+            task['_color'] = task['color'];
             return task['color'];
           }
 
@@ -244,7 +246,7 @@
             showOtherMonths: true, selectOtherMonths: true, dateFormat: "yy/mm/dd"
           });
           //Disable manual input
-          $( id ).keypress(function(event) { event.preventDefault(); return false; });
+          // $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
 
         function addTimePicker(elementId) {
@@ -255,7 +257,7 @@
             }), timeSeparator: '_'
           });
           //Disable manual input
-          $( id ).keypress(function(event) { event.preventDefault(); return false; });
+          // $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
 
         function addTaskPicker(elementId) {
@@ -466,7 +468,7 @@
 
           ss += ('</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'desc',false"+')">Task</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion',false"+')">Progress</th>');
+          // ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion',false"+')">Progress</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime',false"+')">Due Date</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_schedDateTime',false"+')">Sched. Date</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_startDateTime',false"+')">Start Date</th>');
@@ -505,7 +507,7 @@
             ss += ('<td class="invisible">'+task['id']+'</td>');
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
-            ss += ('<td>'+getTaskProgress(task)+'</td>');
+            // ss += ('<td>'+getTaskProgress(task)+'</td>');
             ss += ('<td>'+getTaskDueDate(task)+'</td>');
             ss += ('<td>'+getTaskSchedDate(task)+'</td>');
             ss += ('<td>'+getTaskStartDate(task)+'</td>');
@@ -565,7 +567,7 @@
             ss += ('<img onclick="completeRecurring('+task['id']+')" ');
             ss += ('class="actionicon" src="./images/recur.png">');
             ss += "</img> ";
-            ss += "<div class='tooltipclass'>Postpone recurring task.</div>";
+            ss += "<div class='tooltipclass'>Complete and reschedule recurring task.</div>";
           }
           else {
             ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
@@ -687,30 +689,45 @@
             var minval = "";
             var minid = -1;
             for (var key in allTasks) {
+              task = allTasks[key];
               //Skip children if we're recursing
-              if (recurse && allTasks[key]['parent'] != "") {
+              if (recurse && task['parent'] != "") {
                 continue;
               }
               //Skip things we've already written
               if (key in writtenIDs) {
                 continue;
               }
-              //Automatically addthe first nonwritten value
+              //Automatically add the first nonwritten value
               if (minid == -1) {
-                minval = allTasks[key][sortKey];
+                minval = task[sortKey];
                 minid = key;
                 continue;
               }
-              //Automatically replace with the first non-null value
+
+              //Prefer uncomplete null over complete non-null
+              var taskVal = task[sortKey];
+
+              //Prefer uncompleted over completed
+              if (parseInt(task["completion"]) == 1 && parseInt(allTasks[minid]["completion"]) != 1) {
+                continue;
+              }
+              if (parseInt(task["completion"]) != 1 && parseInt(allTasks[minid]["completion"]) == 1) {
+                minval = task[sortKey];
+                minid = key;
+                continue;
+              }
+
+              //Prefer non-null over null
               if (taskVal != "" && taskVal != " ") {
                 if (minval == "" || minval == " ") {
-                  minval = allTasks[key][sortKey];
+                  minval = task[sortKey];
                   minid = key;
                   continue;
                 }
               }
+
               //Compare with the new value
-              var taskVal = allTasks[key][sortKey];
               if (taskVal.localeCompare(minval) == -1) {
                 if (taskVal == "" || taskVal == " ")
                   continue;
@@ -721,6 +738,7 @@
             if (minid == -1) {
               break;
             }
+            // alert(minid);
             writtenIDs[minid] = true;
             trows += writeTaskData(allTasks[minid],0,recurse);
           }
