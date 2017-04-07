@@ -814,12 +814,29 @@
         }
 
         function collapseAllTasks() {
-          for (var key in allTasks) {
-            if (allTasks[key]["parent"] == "") {
-              allTasks[key]["_collapsed"] = true;
-              refreshTaskId(key);
-              collapseTask(key,true,true);
+          var trlist = [];
+          var parentlist = [];
+          $('tr.taskRow').each(function(){
+              var tr = $(this);
+              var rowid = tr.find('td:eq(0)').text();
+              allTasks[rowid]["_collapsed"] = true;
+              if (allTasks[rowid]["parent"] != "") {
+                trlist.push(tr);
+              } else {
+                parentlist.push(rowid);
+              }
+          });
+          for (var i = 0; i < trlist.length; ++i) {
+            trlist[i].removeClass("onAdd");
+            trlist[i].addClass("onCollapse");
+          }
+          for (var i = 0; i < parentlist.length; ++i) {
+            refreshTaskId(parentlist[i]);
+          setTimeout(function(){
+            for (var i = 0; i < trlist.length; ++i) {
+              trlist[i].hide();
             }
+          },500);
           }
         }
 

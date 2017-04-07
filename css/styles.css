@@ -41,8 +41,7 @@ th {
 }
 .highlight {
   border-radius: 25pt;
-  background: #73AD21;
-  padding: 2pt 10pt 2pt 10pt;
+  padding: 0pt 10pt 1pt 10pt;
   color: white;
   margin: 0px;
   display: inline-block;
@@ -60,13 +59,14 @@ th {
     /*transform: translate3d(0, 0, 0);*/
 
   /*will-change: margin, opacity;*/
-  transition: margin 0.75s ease;
-    margin: 0pt -100pt;
-    /*transform: rotate(30deg);*/
+  transition: transform 0.75s ease;
+    transform: translateX(-100pt);
+    /*margin: 0pt -100pt;*/
 }
 tr.onAdd .highlight {
   /*transform: rotate(0deg);*/
-  margin: 0pt;
+  /*margin: 0pt;*/
+  transform: translateX(0pt);
 }
 meter::-moz-meter-bar { /* Firefox Pseudo Class */
   /*background: red;*/
