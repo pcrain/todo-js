@@ -444,21 +444,25 @@
             ss += ('onclick="downloadData()" ');
             // ss += ('onclick="downloadData('+task['id']+')" ');
             ss += ('class="actionicon" src="./images/download.png"></img> ');
+            ss += "<div class='tooltipclass'>Download tasks to local drive.</div>";
 
             //Refresh
             ss += ('<img ');
             ss += ('onclick="rewriteAllTasks()" ');
             ss += ('class="actionicon" src="./images/refresh.png"></img> ');
+            ss += "<div class='tooltipclass'>Refresh all tasks.</div>";
 
             //Global Collapse
             ss += ('<img ');
             ss += ('onclick="collapseAllTasks()" ');
             ss += ('class="actionicon" src="./images/minus-all.png"></img> ');
+            ss += "<div class='tooltipclass'>Collapse all tasks.</div>";
 
             //Global Expand
             ss += ('<img ');
             ss += ('onclick="expandAllTasks()" ');
             ss += ('class="actionicon" src="./images/plus-all.png"></img> ');
+            ss += "<div class='tooltipclass'>Expand all uncompleted tasks.</div>";
 
           ss += ('</th>');
           ss += ('<th class="sortableHeader" onclick="sortTasks('+"'desc',false"+')">Task</th>');
@@ -559,43 +563,58 @@
           ss += ('<td class="actiontd">');
           if (task["recurRate"] != "") {
             ss += ('<img onclick="completeRecurring('+task['id']+')" ');
-            ss += ('class="actionicon" src="./images/recur.png"></img> ');
+            ss += ('class="actionicon" src="./images/recur.png">');
+            ss += "</img> ";
+            ss += "<div class='tooltipclass'>Postpone recurring task.</div>";
           }
           else {
             ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
             if (parseInt(task["completion"]) == 1) {
-              ss += ('class="actionicon" src="./images/check.png"></img> ');
+              ss += ('class="actionicon" src="./images/check.png">');
+              ss += "</img> ";
+              ss += "<div class='tooltipclass'>Mark task as completed.</div>";
             } else {
-              ss += ('class="actionicon" src="./images/check-off.png"></img> ');
+              ss += ('class="actionicon" src="./images/check-off.png">');
+              ss += "</img> ";
+              ss += "<div class='tooltipclass'>Mark task as not completed.</div>";
             }
           }
 
           //Remove task
           ss += ('<img ');
           ss += ('onclick="deleteTask('+task['id']+')" ');
-          ss += ('class="actionicon" src="./images/deletetask.png"></img> ');
+          ss += ('class="actionicon" src="./images/deletetask.png">');
+          ss += "</img> ";
+          ss += "<div class='tooltipclass'>Delete task.</div>";
 
           //New subtask
           ss += ('<img ');
           ss += ('onclick="newSubTask('+task['id']+')" ');
-          ss += ('class="actionicon" src="./images/newtask.png"></img> ');
+          ss += ('class="actionicon" src="./images/newtask.png">');
+          ss += "</img> ";
+          ss += "<div class='tooltipclass'>Add subtask.</div>";
 
           if (task['children'].length > 0) {
             if (! task["_collapsed"]) {
               //Collapse
               ss += ('<img ');
               ss += ('onclick="collapseTask('+task['id']+')" ');
-              ss += ('class="actionicon" src="./images/minus.png"></img> ');
+              ss += ('class="actionicon" src="./images/minus.png">');
+              ss += "</img> ";
+              ss += "<div class='tooltipclass'>Collapse children.</div>";
             } else {
               //Expand
               ss += ('<img ');
               ss += ('onclick="expandTask('+task['id']+')" ');
-              ss += ('class="actionicon" src="./images/plus.png"></img> ');
+              ss += ('class="actionicon" src="./images/plus.png">');
+              ss += "</img> ";
+              ss += "<div class='tooltipclass'>Expand children.</div>";
             }
           } else {
               ss += ('<img ');
               ss += ('onclick="collapseTask('+task['id']+')" ');
-              ss += ('class="zeroopacity actionicon" src="./images/minus.png"></img> ');
+              ss += ('class="zeroopacity actionicon" src="./images/minus.png">');
+              ss += "</img> ";
           }
 
           ss += "</td>";
