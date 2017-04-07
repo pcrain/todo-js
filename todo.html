@@ -34,7 +34,7 @@
         }
 
         function indentTextString(i)    {
-          return 'padding: 0 0 0 '+(i*20).toString()+'px;';
+          return 'padding: 0 0 0 '+(i*20).toString()+'pt;';
         }
 
         function taskBG(col)    {
@@ -99,7 +99,26 @@
         }
 
         function getTaskDueDate(task) {
-          return task['_dueDateTime'];
+          var className = "laterDueDate";
+          var ss = "";
+          var dd = task['dueDate'];
+          if (dd != "") {
+            dd = parseYmdDate(dd,false);
+            dd.setDate(dd.getDate()-2);
+            if (dd <= Date.now()) { //Scheduled within 48 hours
+              className = 'verysoonDueDate';
+            }
+            else {
+              dd.setDate(dd.getDate()-5);
+              if (dd <= Date.now()) { //Scheduled within a week
+                className = 'soonDueDate';
+              }
+            }
+          }
+          ss += "<td class='"+className+"'>";
+          ss += task['_dueDateTime'];
+          ss += "</td>";
+          return ss;
           // d = task['dueDate'];
           // return (d != "" ? parseYmdDate(d) : d);
         }
@@ -110,7 +129,26 @@
         }
 
         function getTaskSchedDate(task) {
-          return task['_schedDateTime'];
+          var className = "laterSchedDate";
+          var ss = "";
+          var dd = task['schedDate'];
+          if (dd != "") {
+            dd = parseYmdDate(dd,false);
+            dd.setDate(dd.getDate()-2);
+            if (dd <= Date.now()) { //Scheduled within 48 hours
+              className = 'verysoonSchedDate';
+            }
+            else {
+              dd.setDate(dd.getDate()-5);
+              if (dd <= Date.now()) { //Scheduled within a week
+                className = 'soonSchedDate';
+              }
+            }
+          }
+          ss += "<td class='"+className+"'>";
+          ss += task['_schedDateTime'];
+          ss += "</td>";
+          return ss;
           // d = task['schedDate'];
           // return (d != "" ? parseYmdDate(d) : d);
         }
@@ -121,7 +159,7 @@
         }
 
         function getTaskStartDate(task) {
-          return task['_startDateTime'];
+          return "<td>"+task['_startDateTime']+"</td>";
           // d = task['startDate'];
           // return (d != "" ? parseYmdDate(d) : d);
         }
@@ -508,9 +546,9 @@
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
             // ss += ('<td>'+getTaskProgress(task)+'</td>');
-            ss += ('<td>'+getTaskDueDate(task)+'</td>');
-            ss += ('<td>'+getTaskSchedDate(task)+'</td>');
-            ss += ('<td>'+getTaskStartDate(task)+'</td>');
+            ss += (getTaskDueDate(task));
+            ss += (getTaskSchedDate(task));
+            ss += (getTaskStartDate(task));
             ss += writeTaskEstimatedTime(task);
           ss += ('</tr>');
           if (recursive) {
@@ -790,7 +828,6 @@
               if (id == rowid) {
                 //Force transition
                 if (! first) {
-                  tr.hide();
                   tr.addClass("onCollapse");
                   tr.removeClass("onAdd");
                 }
@@ -813,12 +850,24 @@
           }
         }
 
+        function collapseTimer(i,to) {
+          setTimeout(function(){
+            i.removeClass("onAdd");
+            i.addClass("onCollapse");
+          },to);
+          setTimeout(function(){
+            i.hide();
+          },to+500);
+        }
+
         function collapseAllTasks() {
           var trlist = [];
           var parentlist = [];
           $('tr.taskRow').each(function(){
               var tr = $(this);
               var rowid = tr.find('td:eq(0)').text();
+              // if(allTasks[rowid]["_collapsed"])
+              //   return;
               allTasks[rowid]["_collapsed"] = true;
               if (allTasks[rowid]["parent"] != "") {
                 trlist.push(tr);
@@ -826,17 +875,12 @@
                 parentlist.push(rowid);
               }
           });
-          for (var i = 0; i < trlist.length; ++i) {
-            trlist[i].removeClass("onAdd");
-            trlist[i].addClass("onCollapse");
-          }
           for (var i = 0; i < parentlist.length; ++i) {
             refreshTaskId(parentlist[i]);
-          setTimeout(function(){
-            for (var i = 0; i < trlist.length; ++i) {
-              trlist[i].hide();
-            }
-          },500);
+          }
+          for (var i = 0; i < trlist.length; ++i) {
+            // collapseTimer(trlist[trlist.length-i-1],100+10*i);
+            collapseTimer(trlist[trlist.length-i-1],trlist.length*2);
           }
         }
 
