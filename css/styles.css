@@ -35,13 +35,13 @@ th {
   /*transition: opacity 1.0s ease;*/
 }
 #taskTable td {
-  padding : 0pt 0 1pt 10pt;
+  padding : 0pt 5pt 1pt 5pt;
   /*height: 1pt;*/
   /*border : 1px solid black;*/
 }
 .highlight {
   border-radius: 25pt;
-  padding: 0pt 10pt 1pt 10pt;
+  padding: 0pt 10pt 0pt 10pt;
   color: white;
   margin: 0px;
   display: inline-block;
@@ -52,6 +52,7 @@ th {
   overflow: hidden;
   white-space: pre-wrap;
   max-width: 300pt;
+  vertical-align: middle;
 
 
   /* Don't use these; disables tooltip */
@@ -60,13 +61,13 @@ th {
 
   /*will-change: margin, opacity;*/
   transition: transform 0.75s ease;
-    transform: translateX(-100pt);
+    transform: translateX(-100pt) scaleX(0);
     /*margin: 0pt -100pt;*/
 }
 tr.onAdd .highlight {
   /*transform: rotate(0deg);*/
   /*margin: 0pt;*/
-  transform: translateX(0pt);
+  transform: translateX(0pt) scaleX(1);
 }
 meter::-moz-meter-bar { /* Firefox Pseudo Class */
   /*background: red;*/
@@ -225,4 +226,57 @@ div#editTaskForm {
   /*background: rgba(255,255,255,1);*/
   /*background: radial-gradient(ellipse, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 70%);*/
   color: red;
+}
+
+td.soonDueDate {
+  background-image: -webkit-linear-gradient(
+    left,
+    rgba(128,128,0,0),
+    rgba(128,128,0,0.5) 50%,
+    rgba(128,128,0,0)
+  );
+  /*background-color: rgba(128,128,0,0.5);*/
+  border-radius: 25pt;
+}
+
+td.verysoonDueDate {
+  background-image: -webkit-linear-gradient(
+    left,
+    rgba(255,0,0,0),
+    rgba(255,0,0,0.5) 50%,
+    rgba(255,0,0,0)
+  );
+  /*background-color: rgba(255,0,0,0.5);*/
+  border-radius: 25pt;
+}
+
+.soonSchedDate {
+  background-image: -webkit-linear-gradient(
+    left,
+    rgba(0,0,128,0),
+    rgba(0,0,128,0.5) 50%,
+    rgba(0,0,128,0)
+  );
+  /*background-color: rgba(0,0,128,0.5);*/
+  border-radius: 25pt;
+}
+
+.verysoonSchedDate {
+  background-image: -webkit-linear-gradient(
+    left,
+    rgba(128,0,128,0),
+    rgba(128,0,128,0.5) 50%,
+    rgba(128,0,128,0)
+  );
+  /*background-color: rgba(128,0,128,0.5);*/
+  border-radius: 25pt;
+}
+
+tr:hover {
+  background-color: rgba(255,255,255,0.25);
+}
+
+/*TODO: this doesn't play nicely*/
+.indentDiv .highlight {
+  /*vertical-align: bottom;*/
 }
