@@ -52,9 +52,9 @@
         }
 
         function unparseYmdDate(date) {
-          m = dueDate.getMonth()+1;
+          m = date.getMonth()+1;
           m = (m < 10) ? "0"+m.toString() : m.toString();
-          return dueDate.getFullYear()+"/"+m+"/"+dueDate.getDate();
+          return date.getFullYear()+"/"+m+"/"+date.getDate();
         }
 
 
