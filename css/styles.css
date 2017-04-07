@@ -31,6 +31,7 @@ th {
 }
 #taskTable tr.onCollapse {
   opacity: 0;
+  /*display: none;*/
   /*transition: opacity 1.0s ease;*/
 }
 #taskTable td {
@@ -50,6 +51,9 @@ th {
   background-blend-mode: multiply;
   cursor: help;
   overflow: hidden;
+  white-space: pre-wrap;
+  max-width: 300pt;
+
 
   /* Don't use these; disables tooltip */
     /*backface-visibility: hidden;*/
@@ -133,10 +137,12 @@ div#editTaskForm {
   box-shadow: 2px 2px 1px black;
   white-space: pre-wrap;
   background: rgba(0,0,0,0.5);
-  overflow: hidden;
+  /*overflow: hidden;*/
 
   position: fixed;
   transform: translate(-50%, -50%);
+  width: 50%;
+  height: auto;
 
   left: 100%;
   top: 0%;

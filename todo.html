@@ -51,6 +51,13 @@
           return date;
         }
 
+        function unparseYmdDate(date) {
+          m = dueDate.getMonth()+1;
+          m = (m < 10) ? "0"+m.toString() : m.toString();
+          return dueDate.getFullYear()+"/"+m+"/"+dueDate.getDate();
+        }
+
+
         function parseHmsTime(timestring,retString=true) {
           splitTime = timestring.split("_");
           time = new Date();
@@ -244,7 +251,7 @@
           var id = "#"+elementId;
           $( id ).timepicker({
             onSelect: (function(time, inst) {
-              $('#modify_dueTime').val(time+"_00");
+              $(id).val(time+"_00");
             }), timeSeparator: '_'
           });
           //Disable manual input
@@ -267,7 +274,7 @@
             placeholder_text_multiple: "No Dependencies"
           });
           $(id).on('change', function(evt, params) {
-            alert($(id).val());
+            // alert($(id).val());
             // for (var p in $(id)) {
             //   alert(p+": "+$(id)[p]);
             // }
@@ -293,6 +300,7 @@
             ss += addModifiableField("Start Date","modify_startDate",task["startDate"]);
             ss += addModifiableField("Start Time","modify_startTime",task["startTime"]);
             ss += addModifiableField("Project","modify_project",task["project"]);
+            ss += addModifiableField("Recur Rate","modify_recurRate",task["recurRate"]);
             ss += addModifiableField("Color","modify_color",task["color"]);
             ss += addModifiableField("Est. Time","modify_estTime",task["estTime"]);
             ss += addModifiableField("Parent","modify_parent",task["parent"]);
@@ -350,6 +358,7 @@
           task["startDate"] = document.getElementById("modify_startDate").value;
           task["startTime"] = document.getElementById("modify_startTime").value;
           task["project"] = document.getElementById("modify_project").value;
+          task["recurRate"] = document.getElementById("modify_recurRate").value;
           task["color"] = document.getElementById("modify_color").value;
           task["estTime"] = document.getElementById("modify_estTime").value;
           task["parent"] = document.getElementById("modify_parent").value;
@@ -483,7 +492,12 @@
         function writeTaskData(task,indent=0,recursive=true) {
           task["_depth"] = indent;
           var ss = "";
-          ss += ('<tr class="taskRow onAdd">');
+          var visibility = "onAdd";
+          // if (task["parent"] != "" && allTasks[task["parent"]]["_collapsed"]) {
+          //   visibility = "onCollapse";
+          //   task["_collapsed"] = true;
+          // }
+          ss += ('<tr class="taskRow '+visibility+'">');
             ss += ('<td class="invisible">'+task['id']+'</td>');
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
@@ -509,15 +523,51 @@
           return ss;
         }
 
+        function completeRecurring(taskId) {
+          rrate = allTasks[taskId]["recurRate"];
+          dueDate = parseYmdDate(allTasks[taskId]["dueDate"],false);
+          schedDate = parseYmdDate(allTasks[taskId]["schedDate"],false);
+          startDate = parseYmdDate(allTasks[taskId]["startDate"],false);
+          if (rrate == "weekly") {
+            dueDate.setDate(dueDate.getDate() + 7);
+            schedDate.setDate(schedDate.getDate() + 7);
+            startDate.setDate(startDate.getDate() + 7);
+          } else if (rrate == "monthly") {
+            dueDate.setMonth(dueDate.getMonth() + 1);
+            schedDate.setMonth(schedDate.getMonth() + 1);
+            startDate.setMonth(startDate.getMonth() + 1);
+          } else {
+            return; //Invalid recur rate
+          }
+          if (allTasks[taskId]["dueDate"] != "") {
+            var newDueDate = unparseYmdDate(dueDate);
+            updateTask(taskId,"dueDate",newDueDate);
+          }
+          if (allTasks[taskId]["schedDate"] != "") {
+            var newSchedDate = unparseYmdDate(schedDate);
+            updateTask(taskId,"schedDate",newSchedDate);
+          }
+          if (allTasks[taskId]["startDate"] != "") {
+            var newStartDate = unparseYmdDate(startDate);
+            updateTask(taskId,"startDate",newStartDate);
+          }
+        }
+
         function writeTaskActions(task) {
           var ss = "";
           //Check
           ss += ('<td class="actiontd">');
-          ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
-          if (parseInt(task["completion"]) == 1) {
-            ss += ('class="actionicon" src="./images/check.png"></img> ');
-          } else {
-            ss += ('class="actionicon" src="./images/check-off.png"></img> ');
+          if (task["recurRate"] != "") {
+            ss += ('<img onclick="completeRecurring('+task['id']+')" ');
+            ss += ('class="actionicon" src="./images/recur.png"></img> ');
+          }
+          else {
+            ss += ('<img onclick="toggleCompletion('+task['id']+')" ');
+            if (parseInt(task["completion"]) == 1) {
+              ss += ('class="actionicon" src="./images/check.png"></img> ');
+            } else {
+              ss += ('class="actionicon" src="./images/check-off.png"></img> ');
+            }
           }
 
           //Remove task
@@ -595,6 +645,17 @@
           }
           $("#taskTable tbody tr").remove();
           document.getElementById("taskTable").innerHTML = trows;
+          // $('tr.taskRow').each(function(){
+          //     var tr = $(this);
+          //     var rowid = tr.find('td:eq(0)').text();
+          //     var parent = allTasks[rowid]["parent"];
+          //     if (parent != "" && allTasks[parent]["_collapsed"]) {
+          //       tr.removeClass("onAdd");
+          //       tr.addClass("onCollapse");
+          //       tr.hide();
+          //       // setTimeout(function(){tr.hide();},0);
+          //     }
+          // });
         }
 
         function sortTasks(sortKey,recurse=false) {
@@ -806,7 +867,7 @@
 
 
         function generateCSV() {
-          var ss = "id\tparent\tdeps\tcompletion\tdesc\tproject\tdueDate\tdueTime\tschedDate\tschedTime\tstartDate\tstartTime\tcolor\testTime\tpriority\n";
+          var ss = "id\tparent\tdeps\tcompletion\tdesc\tproject\tdueDate\tdueTime\tschedDate\tschedTime\tstartDate\tstartTime\tcolor\testTime\trecurRate\tpriority\n";
           for (var key in allTasks) {
             var task = allTasks[key];
             if (task["parent"] == "") {
@@ -833,6 +894,7 @@
           ss += task['startTime']+"\t";
           ss += task['color']+"\t";
           ss += task['estTime']+"\t";
+          ss += task['recurRate']+"\t";
           ss += task['priority'];
           ss += "\n";
 
@@ -942,11 +1004,7 @@
                   task["_tooltip"] = "Has dependencies";
                 }
               }
-              if (depCompleted) {
-                status = "./images/check.png";
-              } else {
-                status = "./images/cross.png";
-              }
+              status = depCompleted ? "./images/check.png" : "./images/cross.png";
               task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
               +allTasks[deps[i]]["desc"]+"\n";
             }
@@ -964,6 +1022,7 @@
           parseTaskCSV("./_mydata.tsv","./data.tsv");
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
+          // collapseAllTasks();
           // expandAllTasks();
         }
     </script>
