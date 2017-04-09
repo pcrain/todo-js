@@ -104,14 +104,19 @@
           var dd = task['dueDate'];
           if (dd != "") {
             dd = parseYmdDate(dd,false);
-            dd.setDate(dd.getDate()-2);
-            if (dd <= Date.now()) { //Scheduled within 48 hours
-              className = 'verysoonDueDate';
-            }
-            else {
-              dd.setDate(dd.getDate()-5);
-              if (dd <= Date.now()) { //Scheduled within a week
-                className = 'soonDueDate';
+            dd.setDate(dd.getDate()+1);
+            if (dd <= Date.now()) {
+              className = 'overDueDate';
+            } else {
+              dd.setDate(dd.getDate()-2);
+              if (dd <= Date.now()) { //Scheduled within 48 hours
+                className = 'verysoonDueDate';
+              }
+              else {
+                dd.setDate(dd.getDate()-5);
+                if (dd <= Date.now()) { //Scheduled within a week
+                  className = 'soonDueDate';
+                }
               }
             }
           }
@@ -134,14 +139,19 @@
           var dd = task['schedDate'];
           if (dd != "") {
             dd = parseYmdDate(dd,false);
-            dd.setDate(dd.getDate()-2);
-            if (dd <= Date.now()) { //Scheduled within 48 hours
-              className = 'verysoonSchedDate';
-            }
-            else {
-              dd.setDate(dd.getDate()-5);
-              if (dd <= Date.now()) { //Scheduled within a week
-                className = 'soonSchedDate';
+            dd.setDate(dd.getDate()+1);
+            if (dd < Date.now()) {
+              className = 'overDueDate';
+            } else {
+              dd.setDate(dd.getDate()-2);
+              if (dd <= Date.now()) { //Scheduled within 48 hours
+                className = 'verysoonSchedDate';
+              }
+              else {
+                dd.setDate(dd.getDate()-5);
+                if (dd <= Date.now()) { //Scheduled within a week
+                  className = 'soonSchedDate';
+                }
               }
             }
           }
