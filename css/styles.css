@@ -194,6 +194,10 @@ div#editTaskForm {
   /*background-color: white;*/
 }
 
+.actionicon.zeroopacity {
+  cursor: default;
+}
+
 .tooltipicon {
   height: 10pt;
   margin: 2;

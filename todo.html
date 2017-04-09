@@ -288,11 +288,15 @@
           });
         }
 
-        function addDatePicker(elementId) {
+        function addDatePicker(elementId,selectedId="") {
           var id = "#"+elementId;
           $( id ).datepicker({
-            showOtherMonths: true, selectOtherMonths: true, dateFormat: "yy/mm/dd"
+            showOtherMonths: true, selectOtherMonths: true, dateFormat: "yy/mm/dd",
+            currentText: "Now", gotoCurrent: true, showAnim: "slideDown"
           });
+          if (elementId == selectedId) {
+            setTimeout(function(){$( id ).datepicker( "show" );},1000);
+          }
           //Disable manual input
           // $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
@@ -334,7 +338,7 @@
           });
         }
 
-        function modifyTask(id) {
+        function modifyTask(id,selected="modify_desc") {
           dismissModifedTask();
           var task = allTasks[id];
           var div = document.createElement('div');
@@ -365,11 +369,12 @@
           $('body').append(div);
           //Focus on first textbox
             $("input:text").focus(function() { $(this).select(); } );
-            document.getElementById("modify_desc").focus();
+            document.getElementById(selected).focus();
+            // $( selected ).datepicker( "show" );
           //Add date pickers
-            addDatePicker("modify_dueDate");
-            addDatePicker("modify_schedDate");
-            addDatePicker("modify_startDate");
+            addDatePicker("modify_dueDate",selected);
+            addDatePicker("modify_schedDate",selected);
+            addDatePicker("modify_startDate",selected);
           //Add time pickers
             addTimePicker('modify_dueTime');
             addTimePicker('modify_schedTime');
@@ -607,6 +612,17 @@
           }
         }
 
+        function postponeTask(taskId) {
+          schedDate = parseYmdDate(allTasks[taskId]["schedDate"],false);
+          schedDate.setDate(schedDate.getDate() + 1);
+          var newSchedDate = unparseYmdDate(schedDate);
+          updateTask(taskId,"schedDate",newSchedDate);
+        }
+
+        function scheduleTask(task) {
+          //TODO: finish this
+        }
+
         function writeTaskActions(task) {
           var ss = "";
           //Check
@@ -622,12 +638,24 @@
             if (parseInt(task["completion"]) == 1) {
               ss += ('class="actionicon" src="./images/check.png">');
               ss += "</img> ";
-              ss += "<div class='tooltipclass'>Mark task as completed.</div>";
+              ss += "<div class='tooltipclass'>Mark task as not completed.</div>";
             } else {
               ss += ('class="actionicon" src="./images/check-off.png">');
               ss += "</img> ";
-              ss += "<div class='tooltipclass'>Mark task as not completed.</div>";
+              ss += "<div class='tooltipclass'>Mark task as completed.</div>";
             }
+          }
+
+          if (task["schedDate"] != "") {
+            ss += ('<img onclick="postponeTask('+task['id']+')" ');
+            ss += ('class="actionicon" src="./images/postpone.png">');
+            ss += "</img> ";
+            ss += "<div class='tooltipclass'>Postpone scheduled task for a day.</div>";
+          } else {
+            ss += ('<img onclick="modifyTask('+task['id']+",'modify_schedDate'"+')" ');
+            ss += ('class="actionicon" src="./images/schedule.png">');
+            ss += "</img> ";
+            ss += "<div class='tooltipclass'>Scheduled task for some date.</div>";
           }
 
           //Remove task
@@ -661,10 +689,8 @@
               ss += "<div class='tooltipclass'>Expand children.</div>";
             }
           } else {
-              ss += ('<img ');
-              ss += ('onclick="collapseTask('+task['id']+')" ');
-              ss += ('class="zeroopacity actionicon" src="./images/minus.png">');
-              ss += "</img> ";
+              //Placeholder
+              ss += ('<img class="zeroopacity actionicon" src="./images/check-off.png"> </img>');
           }
 
           ss += "</td>";
