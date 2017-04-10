@@ -496,6 +496,24 @@
           return ss;
         }
 
+        function writeSortableHeader(text,sortKey) {
+          var ss = "";
+          ss += '<th class="sortableHeader">';
+          ss += text;
+
+          ss += (' <img class="actionicon" onclick="sortTasks('+"'"+sortKey+"',false,true"+')" ')+('class="actionicon" src="./images/sort-descend.png"></img> ');
+          ss += "<div class='tooltipclass'>Sort descending.</div>";
+          ss += (' <img class="actionicon" onclick="sortTasks('+"'"+sortKey+"',false,false"+')" ')+('class="actionicon" src="./images/sort-ascend.png"></img> ');
+          ss += "<div class='tooltipclass'>Sort ascending.</div>";
+          ss += (' <img class="actionicon" onclick="sortTasks('+"'"+sortKey+"',true,true"+')" ')+('class="actionicon" src="./images/sort-descend-child.png"></img> ');
+          ss += "<div class='tooltipclass'>Sort descending, preserving children.</div>";
+          ss += (' <img class="actionicon" onclick="sortTasks('+"'"+sortKey+"',true,false"+')" ')+('class="actionicon" src="./images/sort-ascend-child.png"></img> ');
+          ss += "<div class='tooltipclass'>Sort ascending, preserving children.</div>";
+
+          ss += '</th>';
+          return ss;
+        }
+
         function writeTaskHeaders() {
           var ss = "";
           ss += ('<thead><tr>');
@@ -528,13 +546,12 @@
             ss += "<div class='tooltipclass'>Expand all uncompleted tasks.</div>";
 
           ss += ('</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'desc',false"+')">Task</th>');
-          // ss += ('<th class="sortableHeader" onclick="sortTasks('+"'completion',false"+')">Progress</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_dueDateTime',false"+')">Due Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_schedDateTime',false"+')">Sched. Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'_startDateTime',false"+')">Start Date</th>');
-          ss += ('<th class="sortableHeader" onclick="sortTasks('+"'estTime',false"+')">Est. Time</th>');
-          ss += ('</tr></thead>');
+          ss += writeSortableHeader("Task","desc");
+          // ss += writeSortableHeader("Progress","completion");
+          ss += writeSortableHeader("Due Date","_dueDateTime");
+          ss += writeSortableHeader("Sched. Date","_schedDateTime");
+          ss += writeSortableHeader("Start Date","_startDateTime");
+          ss += writeSortableHeader("Est. Time","estTime");
           return ss;
         }
 
@@ -741,10 +758,9 @@
           var trows = "";
           trows += writeTaskHeaders();
           for (key in allTasks) {
-            if (allTasks[key]["parent"] != "") {
-              continue;
+            if (allTasks[key]["parent"] == "") {
+              trows += writeTaskData(allTasks[key],0,true);
             }
-            trows += writeTaskData(allTasks[key],0,true);
           }
           $("#taskTable tbody tr").remove();
           document.getElementById("taskTable").innerHTML = trows;
@@ -761,9 +777,12 @@
           // });
         }
 
-        function sortTasks(sortKey,recurse=false) {
+        function sortTasks(sortKey,recurse=false,descend=true,parent="") {
+          var compkey = (descend ? -1 : 1)
           var trows = "";
-          trows += writeTaskHeaders();
+          if (parent == "") {
+            trows += writeTaskHeaders();
+          }
 
           ntasks = Object.keys(allTasks).length;
           var writtenIDs = {};
@@ -773,7 +792,7 @@
             for (var key in allTasks) {
               task = allTasks[key];
               //Skip children if we're recursing
-              if (recurse && task['parent'] != "") {
+              if (recurse && task['parent'] != parent) {
                 continue;
               }
               //Skip things we've already written
@@ -810,7 +829,7 @@
               }
 
               //Compare with the new value
-              if (taskVal.localeCompare(minval) == -1) {
+              if (taskVal.localeCompare(minval) == compkey) {
                 if (taskVal == "" || taskVal == " ")
                   continue;
                 minval = taskVal;
@@ -822,10 +841,25 @@
             }
             // alert(minid);
             writtenIDs[minid] = true;
-            trows += writeTaskData(allTasks[minid],0,recurse);
+            if (recurse) {
+              //Write the task data for the minimal task, preserving it's indentation
+              trows += writeTaskData(allTasks[minid],allTasks[minid]["_depth"],false);
+              //Write all of the children as well
+              trows += sortTasks(sortKey,true,descend,minid);
+            }
+            else {
+              //Just write the current row without worrying about recursion
+              trows += writeTaskData(allTasks[minid],0,false);
+            }
           }
-          $("#taskTable tbody tr").remove();
-          document.getElementById("taskTable").innerHTML = trows;
+          if (parent == "") {
+            //Write the whole table if we're at the top level of recursion
+            $("#taskTable tbody tr").remove();
+            document.getElementById("taskTable").innerHTML = trows;
+          } else {
+            //Return trows for the next recursion level up
+            return trows;
+          }
         }
 
         function toggleCompletion(id) {

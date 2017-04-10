@@ -62,7 +62,7 @@ th {
 
   /*will-change: margin, opacity;*/
   transition: transform 0.75s ease;
-    transform: translateX(-100pt) scaleX(0);
+    transform: translateX(-800pt) scaleX(0);
     /*margin: 0pt -100pt;*/
 }
 tr.onAdd .highlight {
