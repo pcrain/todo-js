@@ -777,7 +777,7 @@
           // });
         }
 
-        function sortTasks(sortKey,recurse=false,descend=true,parent="") {
+        function sortTasks(sortKey,recurse=false,descend=true,parent="",depth=0) {
           var compkey = (descend ? -1 : 1)
           var trows = "";
           if (parent == "") {
@@ -843,9 +843,9 @@
             writtenIDs[minid] = true;
             if (recurse) {
               //Write the task data for the minimal task, preserving it's indentation
-              trows += writeTaskData(allTasks[minid],allTasks[minid]["_depth"],false);
+              trows += writeTaskData(allTasks[minid],depth,false);
               //Write all of the children as well
-              trows += sortTasks(sortKey,true,descend,minid);
+              trows += sortTasks(sortKey,true,descend,minid,depth+1);
             }
             else {
               //Just write the current row without worrying about recursion
