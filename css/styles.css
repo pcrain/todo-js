@@ -6,7 +6,7 @@ body {
   font-weight: bold;
   color: white;
   background-color: rgba(64,64,64,1);
-  background-image: url("../images/hgray2.jpg");
+  /*background-image: url("../images/hgray2.jpg");*/
   text-align: center;
 }
 th {
