@@ -85,18 +85,21 @@
 
       // Task Getters
 
-        function initTaskColors(task=null) {
+        function initTaskData(task=null) {
           if (task != null) {
+            getTaskColor(task);
+            getTaskProject(task);
             for(var i = 0; i < task["children"].length; ++i) {
-              initTaskColors(task["children"][i]);
+              initTaskData(task["children"][i]);
             }
             return;
           }
           for (var key in allTasks) {
             if (allTasks[key]["parent"] == "") {
               getTaskColor(allTasks[key]);
+              getTaskProject(allTasks[key]);
               for(var i = 0; i < allTasks[key]["children"].length; ++i) {
-                initTaskColors(allTasks[key]["children"][i]);
+                initTaskData(allTasks[key]["children"][i]);
               }
             }
           }
@@ -1249,7 +1252,7 @@
           parseTaskCSV(_config["data_file"],_config["data_file_fallback"]);
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
-          initTaskColors();
+          initTaskData();
           sortTasks(defaultSort,defaultSortChild,true);
         }
 
@@ -1272,7 +1275,8 @@
           unsetChangesMade();
         }
       } else if (e.keyCode == 82) { // r
-        rewriteAllTasks();
+        // rewriteAllTasks();
+        sortTasks(defaultSort,defaultSortChild,true);
       }
     });
   </script></body>

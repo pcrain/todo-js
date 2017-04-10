@@ -2,7 +2,7 @@
   "background_image":"./images/hgray2.jpg",
   "data_file":"./_mydata.tsv",
   "data_file_fallback":"./data.tsv",
-  "default_sort":"_dueDateTime",
+  "default_sort":"_schedDateTime",
   "default_sort_child": false,
   "__end":true
 }

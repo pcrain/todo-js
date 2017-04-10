@@ -1,3 +1,9 @@
+## Usage notes
+
+- In Chrome / Chromium, must run with command line flag "--allow-file-access-from-files"
+- Recommend allowing auto download of .tsv files
+- Keyboard: S to save current config, R to reset window to default settings
+
 ## Config File
 
 | Option             | Description                                                  |
