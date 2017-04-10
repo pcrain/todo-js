@@ -1096,6 +1096,7 @@
 
 
         function generateCSV() {
+          // alert("hi");
           var ss = "id\tparent\tdeps\tcompletion\tdesc\tproject\tdueDate\tdueTime\tschedDate\tschedTime\tstartDate\tstartTime\tcolor\testTime\trecurRate\tpriority\n";
           for (var key in allTasks) {
             var task = allTasks[key];
@@ -1276,7 +1277,9 @@
         }
       } else if (e.keyCode == 82) { // r
         // rewriteAllTasks();
-        sortTasks(defaultSort,defaultSortChild,true);
+        if(e.target.tagName == "BODY") {
+          sortTasks(defaultSort,defaultSortChild,true);
+        }
       }
     });
   </script></body>
