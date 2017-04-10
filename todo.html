@@ -15,6 +15,14 @@
         var fields = [];
         var allTasks = {};
         var madeChanges = false;
+        var weekday = new Array(7);
+          weekday[0] = "Sunday     ";
+          weekday[1] = "Monday     ";
+          weekday[2] = "Tuesday    ";
+          weekday[3] = "Wednesday  ";
+          weekday[4] = "Thursday   ";
+          weekday[5] = "Friday     ";
+          weekday[6] = "Saturday   ";
 
       // Formatting methods
 
@@ -98,34 +106,34 @@
           return task['_color'];
         }
 
-        function getTaskDueDate(task) {
+        function getTaskDueDate(task,shortDate=false) {
           var className = "laterDueDate";
           var ss = "";
           var dd = task['dueDate'];
-          if (dd != "") {
+          var pd = task['_dueDateTime'];
+          if (dd != "" && task["completion"] < 1) {
+            beginToday = new Date(); beginToday.setHours(0); beginToday.setMinutes(0);
             dd = parseYmdDate(dd,false);
-            dd.setDate(dd.getDate()+1);
-            if (dd <= Date.now()) {
+            var dow = dd.getDay();
+            dd = Math.round((dd-beginToday)/86400000);
+            if (dd < 0) {
               className = 'overDueDate';
-            } else {
-              dd.setDate(dd.getDate()-2);
-              if (dd <= Date.now()) { //Scheduled within 48 hours
-                className = 'verysoonDueDate';
+            } else if (dd <= 1) { //Scheduled within 48 hours
+              className = 'verysoonDueDate';
+              if(shortDate) {
+                pd = ((dd == 1) ? "Tomorrow" : "Today   ")+"   "+task['dueTime'];
               }
-              else {
-                dd.setDate(dd.getDate()-5);
-                if (dd <= Date.now()) { //Scheduled within a week
-                  className = 'soonDueDate';
-                }
+            } else if (dd <= 7) { //Scheduled within a week
+              className = 'soonDueDate';
+              if(shortDate) {
+                pd = weekday[dow]+task['schedTime'];
               }
             }
           }
           ss += "<td class='"+className+"'>";
-          ss += task['_dueDateTime'];
+          ss += pd;
           ss += "</td>";
           return ss;
-          // d = task['dueDate'];
-          // return (d != "" ? parseYmdDate(d) : d);
         }
 
         function getTaskDueTime(task) {
@@ -133,34 +141,34 @@
           return (t != "" ? parseHmsTime(t) : t);
         }
 
-        function getTaskSchedDate(task) {
+        function getTaskSchedDate(task,shortDate=false) {
           var className = "laterSchedDate";
           var ss = "";
           var dd = task['schedDate'];
-          if (dd != "") {
+          var pd = task['_schedDateTime'];
+          if (dd != "" && task["completion"] < 1) {
+            beginToday = new Date(); beginToday.setHours(0); beginToday.setMinutes(0);
             dd = parseYmdDate(dd,false);
-            dd.setDate(dd.getDate()+1);
-            if (dd < Date.now()) {
+            var dow = dd.getDay();
+            dd = Math.round((dd-beginToday)/86400000);
+            if (dd < 0) {
               className = 'overDueDate';
-            } else {
-              dd.setDate(dd.getDate()-2);
-              if (dd <= Date.now()) { //Scheduled within 48 hours
-                className = 'verysoonSchedDate';
+            } else if (dd <= 1) { //Scheduled within 48 hours
+              className = 'verysoonSchedDate';
+              if(shortDate) {
+                pd = ((dd == 1) ? "Tomorrow" : "Today   ")+"   "+task['schedTime'];
               }
-              else {
-                dd.setDate(dd.getDate()-5);
-                if (dd <= Date.now()) { //Scheduled within a week
-                  className = 'soonSchedDate';
-                }
+            } else if (dd <= 7) { //Scheduled within a week
+              className = 'soonSchedDate';
+              if(shortDate) {
+                pd = weekday[dow]+task['schedTime'];
               }
             }
           }
           ss += "<td class='"+className+"'>";
-          ss += task['_schedDateTime'];
+          ss += pd;
           ss += "</td>";
           return ss;
-          // d = task['schedDate'];
-          // return (d != "" ? parseYmdDate(d) : d);
         }
 
         function getTaskSchedTime(task) {
@@ -168,7 +176,7 @@
           return (t != "" ? parseHmsTime(t) : t);
         }
 
-        function getTaskStartDate(task) {
+        function getTaskStartDate(task,shortDate=false) {
           return "<td>"+task['_startDateTime']+"</td>";
           // d = task['startDate'];
           // return (d != "" ? parseYmdDate(d) : d);
@@ -561,9 +569,9 @@
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
             // ss += ('<td>'+getTaskProgress(task)+'</td>');
-            ss += (getTaskDueDate(task));
-            ss += (getTaskSchedDate(task));
-            ss += (getTaskStartDate(task));
+            ss += (getTaskDueDate(task,true));
+            ss += (getTaskSchedDate(task,true));
+            ss += (getTaskStartDate(task,true));
             ss += writeTaskEstimatedTime(task);
           ss += ('</tr>');
           if (recursive) {
@@ -655,7 +663,7 @@
             ss += ('<img onclick="modifyTask('+task['id']+",'modify_schedDate'"+')" ');
             ss += ('class="actionicon" src="./images/schedule.png">');
             ss += "</img> ";
-            ss += "<div class='tooltipclass'>Scheduled task for some date.</div>";
+            ss += "<div class='tooltipclass'>Schedule task for a specific date.</div>";
           }
 
           //Remove task
