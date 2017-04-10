@@ -140,15 +140,19 @@
             dd = parseYmdDate(dd,false);
             var dow = dd.getDay();
             dd = Math.round((dd-beginToday)/86400000);
-            if (dd < 0) {
-              if (shortDate && dd == -1) {
-                pd = "Yesterday  "+task['dueTime'];
+            if (dd < 1) {
+              if (shortDate) {
+                if (dd == -1) {
+                  pd = "Yesterday  "+task['dueTime'];
+                } else if (dd == 0) {
+                  pd = "Today  "+task['dueTime'];
+                }
               }
               className = 'overDueDate';
-            } else if (dd <= 1) { //Scheduled within 48 hours
+            } else if (dd <= 2) { //Scheduled within 48 hours
               className = 'verysoonDueDate';
-              if(shortDate) {
-                pd = ((dd == 1) ? "Tomorrow" : "Today   ")+"   "+task['dueTime'];
+              if(shortDate && dd == 1) {
+                pd = "Tomorrow   "+task['dueTime'];
               }
             } else if (dd <= 7) { //Scheduled within a week
               className = 'soonDueDate';
@@ -741,7 +745,8 @@
             }
           } else {
               //Placeholder
-              ss += ('<img class="zeroopacity actionicon" src="./images/check-off.png"> </img>');
+              ss += ('<img class="zeroopacity actionicon" src="./images/check-off.png"></img> ');
+              ss += "<div class='tooltipclass zeroopacity'></div>";  //Needed to fix rendering bug
           }
 
           ss += "</td>";

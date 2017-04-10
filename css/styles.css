@@ -119,6 +119,7 @@ meter::-moz-meter-bar { /* Firefox Pseudo Class */
   white-space: pre-wrap;
   background: rgba(0,0,0,0.5);
   max-height: 0;
+  /*width: 160pt;*/
   /*max-width: 0;*/
   overflow: hidden;
   /*transition: all 0.5s ease;*/
@@ -131,6 +132,10 @@ img:hover + .tooltipclass {
   /*max-width: 1000pt;*/
   opacity: 1;
   transition: max-height 3s ease, opacity 1s ease;
+}
+
+img:hover + .tooltipclass.zeroopacity {
+  opacity: 0;
 }
 
 div#editTaskForm {
