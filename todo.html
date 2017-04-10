@@ -14,6 +14,8 @@
       // Global Variables
         var _config = {};
         var configLoaded = false;
+        var defaultSort = "desc";
+        var defaultSortChild = true;
         var fields = [];
         var allTasks = {};
         var madeChanges = false;
@@ -82,6 +84,23 @@
         }
 
       // Task Getters
+
+        function initTaskColors(task=null) {
+          if (task != null) {
+            for(var i = 0; i < task["children"].length; ++i) {
+              initTaskColors(task["children"][i]);
+            }
+            return;
+          }
+          for (var key in allTasks) {
+            if (allTasks[key]["parent"] == "") {
+              getTaskColor(allTasks[key]);
+              for(var i = 0; i < allTasks[key]["children"].length; ++i) {
+                initTaskColors(allTasks[key]["children"][i]);
+              }
+            }
+          }
+        }
 
         function getTaskColor(task) {
           if (parseInt(task["completion"]) == 1) {
@@ -496,9 +515,9 @@
         function writeAllTaskData() {
           var ss = "";
           ss += ('<table id="taskTable" class="tablesorter">');
-          ss += writeTaskHeaders();
+          // ss += writeTaskHeaders();
           ss += ('<tbody>');
-          ss += writeTaskTable();
+          // ss += writeTaskTable();
           ss += ('</tbody>');
           ss += ('</table>');
           return ss;
@@ -556,8 +575,8 @@
           ss += ('</th>');
           ss += writeSortableHeader("Task","desc");
           // ss += writeSortableHeader("Progress","completion");
-          ss += writeSortableHeader("Due Date","_dueDateTime");
           ss += writeSortableHeader("Sched. Date","_schedDateTime");
+          ss += writeSortableHeader("Due Date","_dueDateTime");
           ss += writeSortableHeader("Start Date","_startDateTime");
           ss += writeSortableHeader("Est. Time","estTime");
           return ss;
@@ -585,17 +604,13 @@
           task["_depth"] = indent;
           var ss = "";
           var visibility = "onAdd";
-          // if (task["parent"] != "" && allTasks[task["parent"]]["_collapsed"]) {
-          //   visibility = "onCollapse";
-          //   task["_collapsed"] = true;
-          // }
           ss += ('<tr class="taskRow '+visibility+'">');
             ss += ('<td class="invisible">'+task['id']+'</td>');
             ss += writeTaskActions(task);
             ss += writeTaskDescription(indent,task);
             // ss += ('<td>'+getTaskProgress(task)+'</td>');
-            ss += (getTaskDueDate(task,true));
             ss += (getTaskSchedDate(task,true));
+            ss += (getTaskDueDate(task,true));
             ss += (getTaskStartDate(task,true));
             ss += writeTaskEstimatedTime(task);
           ss += ('</tr>');
@@ -1005,6 +1020,12 @@
                 if ("background_image" in _config) {
                   document.body.style.background = " url("+_config["background_image"]+")";
                 }
+                if ("default_sort" in _config) {
+                  defaultSort = _config["default_sort"];
+                  if ("default_sort_child" in _config) {
+                    defaultSortChild = _config["default_sort_child"];
+                  }
+                }
                 configLoaded = true;
               }
             }
@@ -1228,6 +1249,8 @@
           parseTaskCSV(_config["data_file"],_config["data_file_fallback"]);
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
+          initTaskColors();
+          sortTasks(defaultSort,defaultSortChild,true);
         }
 
         function sleep(ms) {
