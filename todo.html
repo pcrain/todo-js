@@ -12,6 +12,8 @@
     <script type="text/javascript" src="js/chosen.jquery.min.js"></script>
     <script>
       // Global Variables
+        var _config = {};
+        var configLoaded = false;
         var fields = [];
         var allTasks = {};
         var madeChanges = false;
@@ -994,29 +996,24 @@
 
       // File saving / loading
 
-        //http://stackoverflow.com/questions/19706046/how-to-read-an-external-local-json-file-in-javascript
-        function readJsonFile(file, callback) {
-          var rawFile = new XMLHttpRequest();
-          rawFile.overrideMimeType("application/json");
-          rawFile.open("GET", file, true);
-          rawFile.onreadystatechange = function() {
-              if (rawFile.readyState === 4 && rawFile.status == "200") {
-                  callback(rawFile.responseText);
-              }
-          }
-          rawFile.send(null);
-        }
-
         function parseJsonConfig() {
-          try {
-            readJsonFile("./todoconfig.json", function(text){
-              var data = JSON.parse(text);
-              if ("background_image" in data) {
-                document.body.style.background = " url("+data["background_image"]+")";
+          var rawFile = new XMLHttpRequest();
+          rawFile.onreadystatechange = function () {
+          if(rawFile.readyState === 4) {
+              if(rawFile.status === 200 || rawFile.status == 0) {
+                _config = JSON.parse(rawFile.responseText);
+                if ("background_image" in _config) {
+                  document.body.style.background = " url("+_config["background_image"]+")";
+                }
+                configLoaded = true;
               }
-            });
+            }
+          }
+          rawFile.open("GET", "./todoconfig.json", false);
+          try {
+            rawFile.send(null);
           } catch(exception) {
-            //Ignore
+            //Do nothing
           }
         }
 
@@ -1228,12 +1225,15 @@
 
         function generateHTML () {
           parseJsonConfig();
-          parseTaskCSV("./_mydata.tsv","./data.tsv");
+          parseTaskCSV(_config["data_file"],_config["data_file_fallback"]);
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
-          // collapseAllTasks();
-          // expandAllTasks();
         }
+
+        function sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
     </script>
   </head>
   <body><script>
