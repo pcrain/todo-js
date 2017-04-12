@@ -506,7 +506,7 @@
         }
 
         function addSelectField(title,id,defVal,allowMultiple) {
-          var deps = defVal.split(",");
+          var deps = (defVal+"").split(",");
           var m = (allowMultiple ? "multiple" : "");
           var ss = ""
             +"<tr><td>"+title+"</td><td>"

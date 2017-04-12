@@ -46,7 +46,7 @@ th {
   color: white;
   margin: 0px;
   display: inline-block;
-  text-shadow: 0pt 0pt 3pt #000000;
+  text-shadow: 1.5pt 0pt 3pt #000000;
   background-color: lightgray;
   background-blend-mode: multiply;
   cursor: help;
@@ -301,7 +301,3 @@ tr:hover {
   background-color: rgba(255,255,255,0.25);
 }
 
-/*TODO: this doesn't play nicely*/
-.indentDiv .highlight {
-  /*vertical-align: bottom;*/
-}
