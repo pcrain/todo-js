@@ -135,6 +135,22 @@
           var ss = "";
           var dd = task['dueDate'];
           var pd = task['_dueDateTime'];
+
+          //Inherit due date from parent (temporarily)
+          var color = "white";
+          if (dd == "") {
+            var t = task;
+            while (t["parent"] != "") {
+              t = allTasks[t["parent"]];
+              if (t['dueDate'] != "") {
+                dd = t['dueDate'];
+                color = "yellow";
+                task['_dueDateTime'] = t['dueDate']+" "+t['dueTime'];
+                break;
+              }
+            }
+          }
+
           if (dd != "" && task["completion"] < 1) {
             beginToday = new Date(); beginToday.setHours(0); beginToday.setMinutes(0);
             dd = parseYmdDate(dd,false);
@@ -153,15 +169,17 @@
               className = 'verysoonDueDate';
               if(shortDate && dd == 1) {
                 pd = "Tomorrow   "+task['dueTime'];
+              } else {
+                pd = weekday[dow]+task['dueTime'];
               }
             } else if (dd <= 7) { //Scheduled within a week
               className = 'soonDueDate';
               if(shortDate) {
-                pd = weekday[dow]+task['schedTime'];
+                pd = weekday[dow]+task['dueTime'];
               }
             }
           }
-          ss += "<td class='"+className+"'>";
+          ss += "<td style='color:"+color+"' class='"+className+"'>";
           ss += pd;
           ss += "</td>";
           return ss;
@@ -287,8 +305,10 @@
           newTask["desc"] = "Task "+newTask["id"];
           newTask["parent"] = id;
           newTask["children"] = [];
-          newTask["dueDate"] = parentTask["dueDate"];
-          newTask["dueTime"] = parentTask["dueTime"];
+          // alert(Date.now());
+          newTask["schedDate"] = unparseYmdDate(new Date());
+          newTask["dueDate"] = ""; //parentTask["dueDate"];
+          newTask["dueTime"] = ""; //parentTask["dueTime"];
           newTask["startDate"] = parentTask["startDate"];
           newTask["startTime"] = parentTask["startTime"];
           newTask["_depth"] = parentTask["_depth"]+1;
@@ -354,7 +374,7 @@
           // $( id ).keypress(function(event) { event.preventDefault(); return false; });
         }
 
-        function addTaskPicker(elementId) {
+        function addTaskPicker(elementId,allowMultiple) {
           // return;
           var id = "#"+elementId;
           // echo '<select class=chosen-select name="p1tag">';
@@ -362,12 +382,13 @@
           //   echo "<option value='".$allplayers[$i]['player_id']."'>" . $allplayers[$i]['unique_tag'] . "</option>";
           // }
           $(id).chosen({
-            enable_split_word_search: false,
+            enable_split_word_search: true,
             no_results_text: "Task not found!",
             width: "100%",
             search_contains : true,
             max_shown_results : 8,
-            placeholder_text_multiple: "No Dependencies"
+            max_selected_options: (allowMultiple ? Infinity : 1),
+            placeholder_text_multiple: (allowMultiple ? "No Dependencies" : "No Parent")
           });
           $(id).on('change', function(evt, params) {
             // alert($(id).val());
@@ -399,8 +420,8 @@
             ss += addModifiableField("Recur Rate","modify_recurRate",task["recurRate"]);
             ss += addModifiableField("Color","modify_color",task["color"]);
             ss += addModifiableField("Est. Time","modify_estTime",task["estTime"]);
-            ss += addModifiableField("Parent","modify_parent",task["parent"]);
-            ss += addSelectField("Dependencies","modify_deps",task["deps"]);
+            ss += addSelectField("Parent","modify_parent",task["parent"],true);
+            ss += addSelectField("Dependencies","modify_deps",task["deps"],true);
             ss += addModifiableField("Completion","modify_completion",task["completion"]);
           ss += "<td><input onclick='dismissModifedTask()' type='button' value='dismiss'/></td>";
           ss += "<td><input onclick='submitModifiedTask("+id+")' type='button' value='modify'/></td>";
@@ -422,7 +443,8 @@
             addTimePicker('modify_schedTime');
             addTimePicker('modify_startTime');
           //Add task pickers
-            addTaskPicker('modify_deps');
+            addTaskPicker('modify_deps',true);
+            addTaskPicker('modify_parent',false);
           //Add att timeout for visibility
             setTimeout(function(){div.className += "onAdd";},10);
         }
@@ -483,11 +505,12 @@
           }
         }
 
-        function addSelectField(title,id,defVal) {
+        function addSelectField(title,id,defVal,allowMultiple) {
           var deps = defVal.split(",");
+          var m = (allowMultiple ? "multiple" : "");
           var ss = ""
             +"<tr><td>"+title+"</td><td>"
-            +'<select multiple class="chosen-select" '
+            +'<select '+m+' class="chosen-select" '
             +' id="'+id+'">';
 
           for(var key in allTasks) {
@@ -674,10 +697,6 @@
           updateTask(taskId,"schedDate",newSchedDate);
         }
 
-        function scheduleTask(task) {
-          //TODO: finish this
-        }
-
         function writeTaskActions(task) {
           var ss = "";
           //Check
@@ -702,11 +721,13 @@
           }
 
           if (task["schedDate"] != "") {
+            //Postpone task
             ss += ('<img onclick="postponeTask('+task['id']+')" ');
             ss += ('class="actionicon" src="./images/postpone.png">');
             ss += "</img> ";
             ss += "<div class='tooltipclass'>Postpone scheduled task for a day.</div>";
           } else {
+            //Schedule task
             ss += ('<img onclick="modifyTask('+task['id']+",'modify_schedDate'"+')" ');
             ss += ('class="actionicon" src="./images/schedule.png">');
             ss += "</img> ";
@@ -795,17 +816,6 @@
           }
           $("#taskTable tbody tr").remove();
           document.getElementById("taskTable").innerHTML = trows;
-          // $('tr.taskRow').each(function(){
-          //     var tr = $(this);
-          //     var rowid = tr.find('td:eq(0)').text();
-          //     var parent = allTasks[rowid]["parent"];
-          //     if (parent != "" && allTasks[parent]["_collapsed"]) {
-          //       tr.removeClass("onAdd");
-          //       tr.addClass("onCollapse");
-          //       tr.hide();
-          //       // setTimeout(function(){tr.hide();},0);
-          //     }
-          // });
         }
 
         function sortTasks(sortKey,recurse=false,descend=true,parent="",depth=0) {
@@ -822,7 +832,7 @@
             var minid = -1;
             for (var key in allTasks) {
               task = allTasks[key];
-              //Skip children if we're recursing
+              //Skip non-children if we're recursing
               if (recurse && task['parent'] != parent) {
                 continue;
               }
@@ -870,7 +880,6 @@
             if (minid == -1) {
               break;
             }
-            // alert(minid);
             writtenIDs[minid] = true;
             if (recurse) {
               //Write the task data for the minimal task, preserving it's indentation
@@ -906,6 +915,8 @@
           allTasks[id][key] = value;
           refreshTaskId(id);
         }
+
+      // Expand and collapse tasks
 
         function expandAllTasks() {
           for (var key in allTasks) {
@@ -989,7 +1000,7 @@
           }
           for (var i = 0; i < trlist.length; ++i) {
             // collapseTimer(trlist[trlist.length-i-1],100+10*i);
-            collapseTimer(trlist[trlist.length-i-1],trlist.length*2);
+            collapseTimer(trlist[trlist.length-i-1],i*20);
           }
         }
 
@@ -1195,7 +1206,7 @@
       // Todo list data generation
 
         //TODO: heavily clean up this function
-        function computeExtraTaskData(task) {
+        function computeExtraTaskData(task,recurse=false) {
 
           // alert(JSON.stringify(task,null,2));
 
@@ -1228,28 +1239,41 @@
               task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
             }
             for (var i = 0; i < deps.length; ++i) {
-              if (! ("_dependents" in allTasks[deps[i]])) {
-                allTasks[deps[i]]["_dependents"] = [];
-              }
-              allTasks[deps[i]]["_dependents"].push(task["id"]);
-              var depCompleted = parseInt(allTasks[deps[i]]["completion"]) == 1;
-              if (!depCompleted) {
-                if (task['_available']) {
-                  task['_available'] = false;  //Can't do a task with dependencies
-                  task["_tooltip"] = "Has dependencies";
+              if (deps[i] in allTasks) {
+                if (! ("_dependents" in allTasks[deps[i]])) {
+                  allTasks[deps[i]]["_dependents"] = [];
                 }
+                allTasks[deps[i]]["_dependents"].push(task["id"]);
+                var depCompleted = parseInt(allTasks[deps[i]]["completion"]) == 1;
+                if (!depCompleted) {
+                  if (task['_available']) {
+                    task['_available'] = false;  //Can't do a task with dependencies
+                    task["_tooltip"] = "Has dependencies";
+                  }
+                }
+                status = depCompleted ? "./images/check.png" : "./images/cross.png";
+                task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
+                +allTasks[deps[i]]["desc"]+"\n";
+              } else {
+                //TODO: remove dependencies
+                // alert(deps[i] + " not found");
               }
-              status = depCompleted ? "./images/check.png" : "./images/cross.png";
-              task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
-              +allTasks[deps[i]]["desc"]+"\n";
             }
             task["_dependencies"] +=  "<tr><td colspan='2'><hr/></td></tr>";
+          }
+
+          if (recurse) {
+            for(var i = 0; i < task["children"].length; ++i) {
+              computeExtraTaskData(task["children"][i],true);
+            }
           }
         }
 
         function computeAllExtraTaskData() {
           for (var key in allTasks) {
-            computeExtraTaskData(allTasks[key]);
+            if (allTasks[key]["parent"] == "") {
+              computeExtraTaskData(allTasks[key],true);
+            }
           }
         }
 

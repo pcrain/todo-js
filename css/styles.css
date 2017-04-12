@@ -250,7 +250,7 @@ td.overDueDate {
     rgba(255,0,0,0)
   );
   /*background-color: rgba(128,128,0,0.5);*/
-  border-radius: 25pt;
+  border-radius: 0pt;
 }
 
 td.soonDueDate {
@@ -261,7 +261,7 @@ td.soonDueDate {
     rgba(255,255,255,0)
   );
   /*background-color: rgba(128,128,0,0.5);*/
-  border-radius: 25pt;
+  border-radius: 0pt;
 }
 
 td.verysoonDueDate {
@@ -272,7 +272,7 @@ td.verysoonDueDate {
     rgba(128,128,0,0)
   );
   /*background-color: rgba(255,0,0,0.5);*/
-  border-radius: 25pt;
+  border-radius: 0pt;
 }
 
 .soonSchedDate {
@@ -283,7 +283,7 @@ td.verysoonDueDate {
     rgba(0,0,128,0)
   );
   /*background-color: rgba(0,0,128,0.5);*/
-  border-radius: 25pt;
+  border-radius: 0pt;
 }
 
 .verysoonSchedDate {
@@ -294,7 +294,7 @@ td.verysoonDueDate {
     rgba(128,0,128,0)
   );
   /*background-color: rgba(128,0,128,0.5);*/
-  border-radius: 25pt;
+  border-radius: 0pt;
 }
 
 tr:hover {
