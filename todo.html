@@ -1238,7 +1238,7 @@
             if (deps.length > 0) {
               task["_dependencies"] = "Cannot do until the following tasks are done:\n\n";
             }
-            for (var i = 0; i < deps.length; ++i) {
+            for (var i = deps.length-1; i >= 0; --i) {
               if (deps[i] in allTasks) {
                 if (! ("_dependents" in allTasks[deps[i]])) {
                   allTasks[deps[i]]["_dependents"] = [];
@@ -1255,10 +1255,10 @@
                 task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
                 +allTasks[deps[i]]["desc"]+"\n";
               } else {
-                //TODO: remove dependencies
-                // alert(deps[i] + " not found");
+                deps.splice(i,1); //Remove from dependencies
               }
             }
+            task["deps"] = deps.join();
             task["_dependencies"] +=  "<tr><td colspan='2'><hr/></td></tr>";
           }
 
