@@ -118,11 +118,12 @@
 
           if (task['color'] != "") {
             task['_color'] = task['color'];
-            return task['color'];
+            return task['_color'];
           }
 
           if (task['parent'] > 0) { //Inherit
-            task['_color'] = allTasks[task["parent"]]["_color"];
+            task['_color'] = getTaskColor(allTasks[task['parent']]);
+            // task['_color'] = allTasks[task["parent"]]["_color"];
             return task['_color'];
           }
 
@@ -544,19 +545,86 @@
 
         function writeAllTaskData() {
           var ss = "";
+          ss += ('<table id="bigOuterTable"><tr><td>');
           ss += ('<table id="taskTable" class="tablesorter">');
           // ss += writeTaskHeaders();
           ss += ('<tbody>');
           // ss += writeTaskTable();
           ss += ('</tbody>');
-          ss += ('</table>');
+          ss += ('</table></td><td>');
+          ss += ('<table id="calendarTable">');
+          ss += ('<tbody>');
+          ss += writeCalendarTable();
+          ss += ('</tbody>');
+          ss += ('</td></tr></table>');
+          return ss;
+        }
+
+        //TODO: finish
+        function writeCalendarTable() {
+          var todayTasks = {};
+          var today = unparseYmdDate(new Date());
+          for (var key in allTasks) {
+            if (allTasks[key]["schedDate"] == today) {
+              if (allTasks[key]["schedTime"] != "") {
+                var as = allTasks[key]["schedTime"];
+                var ts = as.substr(0,2)+":"+as.substr(3,2);
+                if (ts in todayTasks) {
+                  todayTasks[ts].push(allTasks[key]);
+                } else {
+                  todayTasks[ts] = [];
+                  todayTasks[ts].push(allTasks[key]);
+                }
+              }
+            }
+          }
+
+          var ss = "";
+          var startHour = 7;
+          var endHour = 23;
+          var minute = 0;
+          var hour = startHour;
+          var rowskip = 0;
+          while(true) {
+            var ts = hour + ":" + ((minute == 0) ? minute+"0" : minute+"");
+            ss += "<tr><td>"+ts+"</td>";
+            if (rowskip > 0) {
+              rowskip -= 1;
+              ss += "</td></tr>";
+            } else {
+              if (ts in todayTasks) {
+                cs = 12/todayTasks[ts].length;
+                for(var i = 0; i < 12/cs; ++i) {
+                  var tti = todayTasks[ts][i];
+                  var tc = getTaskColor(tti);
+                  var rowskip = (writeTaskEstimatedTime(tti,true)/15)-1;
+                  // var tc = "Green";
+                  ss += "<td class='calendarCell' rowspan="+(rowskip+1)+" colspan="+cs+" style='background-color: "+tc+";'>";
+                  ss += tti["desc"];
+                  ss += "</td>";
+                }
+                ss += "</tr>";
+              } else {
+                cs = 12;
+                ss += "<td class='calendarCell' colspan="+cs+"></td></tr>";
+              }
+            }
+            minute += 15;
+            if (minute == 60) {
+              hour += 1;
+              if (hour > endHour)
+                break;
+              minute = 0;
+            }
+            // ss += "<tr><td class='highlight'>"+i+"</td></tr>";
+          }
           return ss;
         }
 
         function writeSortableHeader(text,sortKey) {
           var ss = "";
           ss += '<th class="sortableHeader">';
-          ss += text;
+          ss += text+"<br/>";
 
           ss += (' <img class="actionicon" onclick="sortTasks('+"'"+sortKey+"',false,true"+')" ')+('class="actionicon" src="./images/sort-descend.png"></img> ');
           ss += "<div class='tooltipclass'>Sort descending.</div>";
@@ -607,8 +675,8 @@
           // ss += writeSortableHeader("Progress","completion");
           ss += writeSortableHeader("Sched. Date","_schedDateTime");
           ss += writeSortableHeader("Due Date","_dueDateTime");
-          ss += writeSortableHeader("Start Date","_startDateTime");
           ss += writeSortableHeader("Est. Time","estTime");
+          // ss += writeSortableHeader("Start Date","_startDateTime");
           return ss;
         }
 
@@ -641,8 +709,8 @@
             // ss += ('<td>'+getTaskProgress(task)+'</td>');
             ss += (getTaskSchedDate(task,true));
             ss += (getTaskDueDate(task,true));
-            ss += (getTaskStartDate(task,true));
             ss += writeTaskEstimatedTime(task);
+            // ss += (getTaskStartDate(task,true));
           ss += ('</tr>');
           if (recursive) {
             var unavailable = [];
@@ -790,7 +858,7 @@
           return ss;
         }
 
-        function writeTaskEstimatedTime(task) {
+        function writeTaskEstimatedTime(task,returnInt=false) {
           var ss = "";
           ss += ('<td>');
           etime = task['estTime'];
@@ -800,6 +868,8 @@
             if (unit == 'h') {
               time = time*60;
             }
+            if (returnInt)
+              return time;
             ss += (parseInt(time)+"m");
           }
           ss += ('</td>');
