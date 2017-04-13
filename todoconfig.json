@@ -2,8 +2,10 @@
   "background_image":"./images/hgray2.jpg",
   "data_file":"./_mydata.tsv",
   "data_file_fallback":"./data.tsv",
-  "default_sort":"desc",
-  "default_sort_child": true,
+  "default_sort":"schedDate",
+  "default_sort_child": false,
   "default_minute_interval": 15,
+  "start_collapsed" : true,
+  "show_calendar" : true,
   "__end":true
 }

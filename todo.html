@@ -13,6 +13,8 @@
     <script>
       // Global Variables
         var _config = {};
+        var startCollapsed = false;
+        var showCalendar = true;
         var configLoaded = false;
         var defaultSort = "desc";
         var defaultSortChild = true;
@@ -597,11 +599,13 @@
           // ss += writeTaskTable();
           ss += ('</tbody>');
           ss += ('</table></td><td>');
-          ss += ('<table id="calendarTable">');
-          ss += ('<tbody>');
-          ss += writeCalendarTable();
-          ss += ('</tbody>');
-          ss += ('</td></tr></table>');
+          if (showCalendar) {
+            ss += ('<table id="calendarTable">');
+            ss += ('<tbody>');
+            ss += writeCalendarTable();
+            ss += ('</tbody>');
+            ss += ('</td></tr></table>');
+          }
           return ss;
         }
 
@@ -1102,7 +1106,7 @@
           },to+500);
         }
 
-        function collapseAllTasks() {
+        function collapseAllTasks(instant=false) {
           var trlist = [];
           var parentlist = [];
           $('tr.taskRow').each(function(){
@@ -1121,8 +1125,14 @@
             refreshTaskId(parentlist[i]);
           }
           for (var i = 0; i < trlist.length; ++i) {
-            // collapseTimer(trlist[trlist.length-i-1],100+10*i);
-            collapseTimer(trlist[trlist.length-i-1],i*20);
+            if (! instant) {
+              // collapseTimer(trlist[trlist.length-i-1],100+10*i);
+              collapseTimer(trlist[trlist.length-i-1],i*20);
+              continue;
+            }
+            trlist[i].removeClass("onAdd");
+            trlist[i].addClass("onCollapse");
+            trlist[i].hide();
           }
         }
 
@@ -1169,6 +1179,12 @@
                 }
                 if ("default_minute_interval" in _config) {
                   defaultInterval = _config["default_minute_interval"];
+                }
+                if ("start_collapsed" in _config) {
+                  startCollapsed = _config["start_collapsed"];
+                }
+                if ("show_calendar" in _config) {
+                  showCalendar = _config["show_calendar"];
                 }
                 configLoaded = true;
               }
@@ -1409,6 +1425,9 @@
           document.write(writeAllTaskData());
           initTaskData();
           sortTasks(defaultSort,defaultSortChild,true);
+          if (startCollapsed) {
+            collapseAllTasks(true);
+          }
         }
 
         function sleep(ms) {

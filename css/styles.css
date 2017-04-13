@@ -306,3 +306,7 @@ td.verysoonDueDate {
   /*background-color: blue;*/
   text-shadow: 1.5pt 0pt 3pt #000000;
 }
+
+#bigOuterTable td {
+  vertical-align: top;
+}
