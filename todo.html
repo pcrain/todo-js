@@ -16,6 +16,7 @@
         var configLoaded = false;
         var defaultSort = "desc";
         var defaultSortChild = true;
+        var defaultInterval = 15;
         var fields = [];
         var allTasks = {};
         var madeChanges = false;
@@ -196,6 +197,22 @@
           var ss = "";
           var dd = task['schedDate'];
           var pd = task['_schedDateTime'];
+
+          //Inherit due date from parent (temporarily)
+          var color = "white";
+          if (dd == "") {
+            var t = task;
+            while (t["parent"] != "") {
+              t = allTasks[t["parent"]];
+              if (t['schedDate'] != "") {
+                dd = t['schedDate'];
+                color = "yellow";
+                task['_schedDateTime'] = t['schedDate']+" "+t['schedTime'];
+                break;
+              }
+            }
+          }
+
           if (dd != "" && task["completion"] < 1) {
             beginToday = new Date(); beginToday.setHours(0); beginToday.setMinutes(0);
             dd = parseYmdDate(dd,false);
@@ -218,7 +235,8 @@
               }
             }
           }
-          ss += "<td class='"+className+"'>";
+          ss += "<td style='color:"+color+"' class='"+className+"'>";
+          // ss += "<td class='"+className+"'>";
           ss += pd;
           ss += "</td>";
           return ss;
@@ -280,7 +298,7 @@
           return ss;
         }
 
-        function newSubTask(id) {
+        function newSubTask(id="") {
           // if (! confirm("Add subtask for '"+allTasks[id]['desc']+"'?")) return;
 
           var maxId = 0;
@@ -293,25 +311,48 @@
           maxId += 1;
 
           //Clone the parent task and reset some attributes
-          var parentTask = allTasks[id];
-          setChangesMade();
-          var newTask = jQuery.extend(true, {}, parentTask);
-          allTasks[""+maxId.toString()] = newTask;
-          for(var key in newTask) {
-            newTask[key] = "";
+          if (id != "") {
+            var parentTask = allTasks[id];
+            var newTask = jQuery.extend(true, {}, parentTask);
+            for(var key in newTask) {
+              newTask[key] = "";
+            }
+            newTask["id"] = maxId.toString();
+            newTask["desc"] = "Task "+newTask["id"];
+            newTask["parent"] = id;
+            newTask["children"] = [];
+            // alert(Date.now());
+            newTask["schedDate"] = unparseYmdDate(new Date());
+            newTask["dueDate"] = ""; //parentTask["dueDate"];
+            newTask["dueTime"] = ""; //parentTask["dueTime"];
+            newTask["startDate"] = parentTask["startDate"];
+            newTask["startTime"] = parentTask["startTime"];
+            newTask["_depth"] = parentTask["_depth"]+1;
+            parentTask["children"].push(newTask);
+          } else {
+            var newTask = {};
+            newTask["id"] = maxId.toString();
+            newTask["desc"] = "Task "+newTask["id"];
+            newTask["schedDate"] = unparseYmdDate(new Date());
+
+            newTask["parent"] = "";
+            newTask["deps"] = "";
+            newTask["completion"] = "";
+            newTask["project"] = "";
+            newTask["children"] = [];
+            newTask["schedTime"] = "";
+            newTask["dueDate"] = "";
+            newTask["dueTime"] = "";
+            newTask["startDate"] = "";
+            newTask["startTime"] = "";
+            newTask["color"] = "";
+            newTask["estTime"] = "";
+            newTask["recurRate"] = "";
+            newTask["priority"] = "";
+            newTask["_depth"] = 0;
           }
-          newTask["id"] = maxId.toString();
-          newTask["desc"] = "Task "+newTask["id"];
-          newTask["parent"] = id;
-          newTask["children"] = [];
-          // alert(Date.now());
-          newTask["schedDate"] = unparseYmdDate(new Date());
-          newTask["dueDate"] = ""; //parentTask["dueDate"];
-          newTask["dueTime"] = ""; //parentTask["dueTime"];
-          newTask["startDate"] = parentTask["startDate"];
-          newTask["startTime"] = parentTask["startTime"];
-          newTask["_depth"] = parentTask["_depth"]+1;
-          parentTask["children"].push(newTask);
+          setChangesMade();
+          allTasks[""+maxId.toString()] = newTask;
 
           //Open modify task dialogue
           modifyTask(maxId);
@@ -367,7 +408,13 @@
           $( id ).timepicker({
             onSelect: (function(time, inst) {
               $(id).val(time+"_00");
-            }), timeSeparator: '_', step: 15
+            }),
+            timeSeparator: '_',
+            minutes: {
+                starts: 0,                // First displayed minute
+                ends: 59,                 // Last displayed minute
+                interval: defaultInterval // Interval of displayed minutes
+            },
           });
           //Disable manual input
           // $( id ).keypress(function(event) { event.preventDefault(); return false; });
@@ -668,6 +715,12 @@
             ss += ('onclick="expandAllTasks()" ');
             ss += ('class="actionicon" src="./images/plus-all.png"></img> ');
             ss += "<div class='tooltipclass'>Expand all uncompleted tasks.</div>";
+
+            //New Project
+            ss += ('<img ');
+            ss += ('onclick="newSubTask()" ');
+            ss += ('class="actionicon" src="./images/newproject.png"></img> ');
+            ss += "<div class='tooltipclass'>Create new project.</div>";
 
           ss += ('</th>');
           ss += writeSortableHeader("Task","desc");
@@ -1113,6 +1166,9 @@
                   if ("default_sort_child" in _config) {
                     defaultSortChild = _config["default_sort_child"];
                   }
+                }
+                if ("default_minute_interval" in _config) {
+                  defaultInterval = _config["default_minute_interval"];
                 }
                 configLoaded = true;
               }

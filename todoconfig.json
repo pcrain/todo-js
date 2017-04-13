@@ -4,5 +4,6 @@
   "data_file_fallback":"./data.tsv",
   "default_sort":"desc",
   "default_sort_child": true,
+  "default_minute_interval": 15,
   "__end":true
 }

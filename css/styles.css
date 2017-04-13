@@ -20,6 +20,7 @@ th {
 #taskTable th {
   padding : 0pt 10pt 0pt 10pt;
   height : 24pt;
+  white-space: pre-wrap;
 }
 #taskTable tr {
   /*will-change: opacity;*/
