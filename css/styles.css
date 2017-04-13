@@ -297,11 +297,11 @@ td.verysoonDueDate {
   border-radius: 0pt;
 }
 
-tr:hover {
+#taskTable tr:hover {
   background-color: rgba(255,255,255,0.25);
 }
 
 .calendarCell {
-  background-color: blue;
+  /*background-color: blue;*/
   text-shadow: 1.5pt 0pt 3pt #000000;
 }

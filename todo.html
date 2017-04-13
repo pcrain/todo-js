@@ -281,9 +281,7 @@
         }
 
         function newSubTask(id) {
-          if (! confirm("Add subtask for '"+allTasks[id]['desc']+"'?")) {
-            return;
-          }
+          // if (! confirm("Add subtask for '"+allTasks[id]['desc']+"'?")) return;
 
           var maxId = 0;
           for(key in allTasks) {
@@ -369,7 +367,7 @@
           $( id ).timepicker({
             onSelect: (function(time, inst) {
               $(id).val(time+"_00");
-            }), timeSeparator: '_'
+            }), timeSeparator: '_', step: 15
           });
           //Disable manual input
           // $( id ).keypress(function(event) { event.preventDefault(); return false; });
@@ -588,13 +586,14 @@
           while(true) {
             var ts = hour + ":" + ((minute == 0) ? minute+"0" : minute+"");
             ss += "<tr><td>"+ts+"</td>";
-            if (rowskip > 0) {
+            if (rowskip > 0 && !(ts in todayTasks)) {
               rowskip -= 1;
-              ss += "</td></tr>";
+              ss += "<td></td></tr>";
             } else {
               if (ts in todayTasks) {
-                cs = 12/todayTasks[ts].length;
-                for(var i = 0; i < 12/cs; ++i) {
+                // cs = 12/(todayTasks[ts].length);
+                cs = 1;
+                for(var i = 0; i < todayTasks[ts].length; ++i) {
                   var tti = todayTasks[ts][i];
                   var tc = getTaskColor(tti);
                   var rowskip = (writeTaskEstimatedTime(tti,true)/15)-1;
@@ -605,7 +604,7 @@
                 }
                 ss += "</tr>";
               } else {
-                cs = 12;
+                cs = 1;
                 ss += "<td class='calendarCell' colspan="+cs+"></td></tr>";
               }
             }
