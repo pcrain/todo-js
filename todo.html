@@ -12,14 +12,16 @@
     <script type="text/javascript" src="js/chosen.jquery.min.js"></script>
     <script>
       // Global Variables
-        var _config = {};
-        var startCollapsed = false;
-        var showCalendar = true;
-        var configLoaded = false;
-        var defaultSort = "desc";
-        var defaultSortChild = true;
-        var defaultInterval = 15;
-        var fields = [];
+        var _config = {};  //Configuration optins
+          _config["start_collapsed"] = false;
+          _config["show_calendar"] = true;
+          _config["default_sort"] = "desc";
+          _config["default_sort_child"] = true;
+          _config["minute_interval"] = 15;
+          _config["data_file_fallback"] = "./data.tsv";
+        var configLoaded = false;  //Whether the configuration file has been loaded
+
+        var fields = [];  //List of attributes for each task
         var allTasks = {};
         var madeChanges = false;
         var weekday = new Array(7);
@@ -52,6 +54,7 @@
           return 'padding: 0 0 0 '+(i*20).toString()+'pt;';
         }
 
+        //TODO: add dual colors
         function taskBG(col)    {
           // gradient = "-webkit-linear-gradient(right, "+col+", rgba(255,255,255,255))";
           gradient = "-webkit-linear-gradient(225deg, rgba(255,255,255,1), "+col+")";
@@ -300,9 +303,7 @@
           return ss;
         }
 
-        function newSubTask(id="") {
-          // if (! confirm("Add subtask for '"+allTasks[id]['desc']+"'?")) return;
-
+        function newSubTask(parentId="") {
           var maxId = 0;
           for(key in allTasks) {
             var pi = parseInt(allTasks[key]["id"]);
@@ -313,46 +314,26 @@
           maxId += 1;
 
           //Clone the parent task and reset some attributes
-          if (id != "") {
-            var parentTask = allTasks[id];
-            var newTask = jQuery.extend(true, {}, parentTask);
-            for(var key in newTask) {
-              newTask[key] = "";
-            }
-            newTask["id"] = maxId.toString();
-            newTask["desc"] = "Task "+newTask["id"];
-            newTask["parent"] = id;
-            newTask["children"] = [];
-            // alert(Date.now());
-            newTask["schedDate"] = unparseYmdDate(new Date());
-            newTask["dueDate"] = ""; //parentTask["dueDate"];
-            newTask["dueTime"] = ""; //parentTask["dueTime"];
+          var newTask = {};
+          for (var i = 0; i < fields.length; ++i) {
+            newTask[fields[i]] = "";
+          }
+          newTask["id"] = maxId.toString();
+          newTask["children"] = [];
+          newTask["desc"] = "Task "+newTask["id"];
+          newTask["schedDate"] = unparseYmdDate(new Date());
+
+          if (parentId != "") {
+            var parentTask = allTasks[parentId];
+            parentTask["children"].push(newTask);
+            newTask["parent"] = parentId;
             newTask["startDate"] = parentTask["startDate"];
             newTask["startTime"] = parentTask["startTime"];
             newTask["_depth"] = parentTask["_depth"]+1;
-            parentTask["children"].push(newTask);
           } else {
-            var newTask = {};
-            newTask["id"] = maxId.toString();
-            newTask["desc"] = "Task "+newTask["id"];
-            newTask["schedDate"] = unparseYmdDate(new Date());
-
-            newTask["parent"] = "";
-            newTask["deps"] = "";
-            newTask["completion"] = "";
-            newTask["project"] = "";
-            newTask["children"] = [];
-            newTask["schedTime"] = "";
-            newTask["dueDate"] = "";
-            newTask["dueTime"] = "";
-            newTask["startDate"] = "";
-            newTask["startTime"] = "";
-            newTask["color"] = "";
-            newTask["estTime"] = "";
-            newTask["recurRate"] = "";
-            newTask["priority"] = "";
             newTask["_depth"] = 0;
           }
+
           setChangesMade();
           allTasks[""+maxId.toString()] = newTask;
 
@@ -363,7 +344,6 @@
           rewriteAllTasks();
         }
 
-        //TODO: finish this
         function deleteTask(id,confirmDelete=true) {
           $('tr.taskRow').each(function(){
             var tr = $(this);
@@ -385,7 +365,6 @@
                 }
                 setChangesMade();
                 delete allTasks[id];
-                // alert("delete "+id);
               }
               return;
             }
@@ -415,7 +394,7 @@
             minutes: {
                 starts: 0,                // First displayed minute
                 ends: 59,                 // Last displayed minute
-                interval: defaultInterval // Interval of displayed minutes
+                interval: _config["minute_interval"] // Interval of displayed minutes
             },
           });
           //Disable manual input
@@ -423,12 +402,7 @@
         }
 
         function addTaskPicker(elementId,allowMultiple) {
-          // return;
           var id = "#"+elementId;
-          // echo '<select class=chosen-select name="p1tag">';
-          // for ($i = 0; $i < count($allplayers); $i ++) {
-          //   echo "<option value='".$allplayers[$i]['player_id']."'>" . $allplayers[$i]['unique_tag'] . "</option>";
-          // }
           $(id).chosen({
             enable_split_word_search: true,
             no_results_text: "Task not found!",
@@ -471,6 +445,7 @@
             ss += addSelectField("Parent","modify_parent",task["parent"],true);
             ss += addSelectField("Dependencies","modify_deps",task["deps"],true);
             ss += addModifiableField("Completion","modify_completion",task["completion"]);
+          ss += "<tr>";
           ss += "<td><input onclick='dismissModifedTask()' type='button' value='dismiss'/></td>";
           ss += "<td><input onclick='submitModifiedTask("+id+")' type='button' value='modify'/></td>";
           ss += "</tr>";
@@ -481,7 +456,6 @@
           //Focus on first textbox
             $("input:text").focus(function() { $(this).select(); } );
             document.getElementById(selected).focus();
-            // $( selected ).datepicker( "show" );
           //Add date pickers
             addDatePicker("modify_dueDate",selected);
             addDatePicker("modify_schedDate",selected);
@@ -517,18 +491,18 @@
 
           //Update task with new modified information
           setChangesMade();
-          task["desc"] = document.getElementById("modify_desc").value;
-          task["dueDate"] = document.getElementById("modify_dueDate").value;
-          task["dueTime"] = document.getElementById("modify_dueTime").value;
+          task["desc"]      = document.getElementById("modify_desc").value;
+          task["dueDate"]   = document.getElementById("modify_dueDate").value;
+          task["dueTime"]   = document.getElementById("modify_dueTime").value;
           task["schedDate"] = document.getElementById("modify_schedDate").value;
           task["schedTime"] = document.getElementById("modify_schedTime").value;
           task["startDate"] = document.getElementById("modify_startDate").value;
           task["startTime"] = document.getElementById("modify_startTime").value;
-          task["project"] = document.getElementById("modify_project").value;
+          task["project"]   = document.getElementById("modify_project").value;
           task["recurRate"] = document.getElementById("modify_recurRate").value;
-          task["color"] = document.getElementById("modify_color").value;
-          task["estTime"] = document.getElementById("modify_estTime").value;
-          task["parent"] = document.getElementById("modify_parent").value;
+          task["color"]     = document.getElementById("modify_color").value;
+          task["estTime"]   = document.getElementById("modify_estTime").value;
+          task["parent"]    = document.getElementById("modify_parent").value;
 
           //Convert dependencies to comma separated format
           task["deps"] = "";
@@ -538,7 +512,6 @@
           }
 
           task["completion"] = document.getElementById("modify_completion").value;
-          computeExtraTaskData(task);
 
           //Find and replace the relevant table row
           refreshTaskId(task["id"]);
@@ -599,7 +572,7 @@
           // ss += writeTaskTable();
           ss += ('</tbody>');
           ss += ('</table></td><td>');
-          if (showCalendar) {
+          if (_config["show_calendar"]) {
             ss += ('<table id="calendarTable">');
             ss += ('<tbody>');
             ss += writeCalendarTable();
@@ -1163,38 +1136,26 @@
       // File saving / loading
 
         function parseJsonConfig() {
+          //Load config from file and populate global array with all defined values
           var rawFile = new XMLHttpRequest();
           rawFile.onreadystatechange = function () {
-          if(rawFile.readyState === 4) {
+            if(rawFile.readyState === 4) {
               if(rawFile.status === 200 || rawFile.status == 0) {
-                _config = JSON.parse(rawFile.responseText);
-                if ("background_image" in _config) {
-                  document.body.style.background = " url("+_config["background_image"]+")";
-                }
-                if ("default_sort" in _config) {
-                  defaultSort = _config["default_sort"];
-                  if ("default_sort_child" in _config) {
-                    defaultSortChild = _config["default_sort_child"];
-                  }
-                }
-                if ("minute_interval" in _config) {
-                  defaultInterval = _config["minute_interval"];
-                }
-                if ("start_collapsed" in _config) {
-                  startCollapsed = _config["start_collapsed"];
-                }
-                if ("show_calendar" in _config) {
-                  showCalendar = _config["show_calendar"];
+                var config = JSON.parse(rawFile.responseText);
+                for(var key in config) {
+                  _config[key] = config[key];
                 }
                 configLoaded = true;
               }
             }
           }
           rawFile.open("GET", "./todoconfig.json", false);
-          try {
-            rawFile.send(null);
-          } catch(exception) {
-            //Do nothing
+          try { rawFile.send(null); }
+          catch(exception) { /*Do nothing*/ }
+
+          //Do any immediate overwrites
+          if ("background_image" in _config) {
+            document.body.style.background = " url("+_config["background_image"]+")";
           }
         }
 
@@ -1211,7 +1172,6 @@
                     continue;
                   }
                   split = allText[line].split('\t');
-                  // alert(split);
                   if (split[0] == "") { //Ignore if no id
                     continue;
                   }
@@ -1253,8 +1213,7 @@
 
 
         function generateCSV() {
-          // alert("hi");
-          var ss = "id\tparent\tdeps\tcompletion\tdesc\tproject\tdueDate\tdueTime\tschedDate\tschedTime\tstartDate\tstartTime\tcolor\testTime\trecurRate\tpriority\n";
+          var ss = fields.join("\t")+"\n";
           for (var key in allTasks) {
             var task = allTasks[key];
             if (task["parent"] == "") {
@@ -1267,30 +1226,12 @@
 
         function generateCSVRow(task) {
           var ss = "";
-          ss += task['id']+"\t";
-          ss += task['parent']+"\t";
-          ss += task['deps']+"\t";
-          ss += task['completion']+"\t";
-          ss += task['desc']+"\t";
-          ss += task['project']+"\t";
-          ss += task['dueDate']+"\t";
-          ss += task['dueTime']+"\t";
-          ss += task['schedDate']+"\t";
-          ss += task['schedTime']+"\t";
-          ss += task['startDate']+"\t";
-          ss += task['startTime']+"\t";
-          ss += task['color']+"\t";
-          ss += task['estTime']+"\t";
-          ss += task['recurRate']+"\t";
-          ss += task['priority'];
-          ss += "\n";
-
-          for (var j = 0; j < task["children"].length; j++) {
-            child = allTasks[task["children"][j]["id"]];
-            // if (child == undefined) continue;
-            ss += generateCSVRow(child);
+          for(var i = 0; i < fields.length; ++i) {
+            ss += task[fields[i]] + ((i == fields.length-1) ? "\n" : "\t");
           }
-
+          for (var j = 0; j < task["children"].length; j++) {
+            ss += generateCSVRow(allTasks[task["children"][j]["id"]]);
+          }
           return ss;
         }
 
@@ -1394,7 +1335,7 @@
                 }
                 status = depCompleted ? "./images/check.png" : "./images/cross.png";
                 task["_dependencies"] += "<img class='tooltipicon' src='"+status+"'></img>  "
-                +allTasks[deps[i]]["desc"]+"\n";
+                  +allTasks[deps[i]]["desc"]+"\n";
               } else {
                 deps.splice(i,1); //Remove from dependencies
               }
@@ -1424,14 +1365,10 @@
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
           initTaskData();
-          sortTasks(defaultSort,defaultSortChild,true);
-          if (startCollapsed) {
+          sortTasks(_config["default_sort"],_config["default_sort_child"],true);
+          if (_config["start_collapsed"]) {
             collapseAllTasks(true);
           }
-        }
-
-        function sleep(ms) {
-          return new Promise(resolve => setTimeout(resolve, ms));
         }
 
     </script>
