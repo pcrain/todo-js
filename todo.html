@@ -91,50 +91,46 @@
 
       // Task Getters
 
-        function initTaskData(task=null) {
+        function computeTaskData(task=null) {
           if (task != null) {
-            getTaskColor(task);
-            getTaskProject(task);
+            computeTaskColor(task);
+            computeTaskProject(task);
             for(var i = 0; i < task["children"].length; ++i) {
-              initTaskData(task["children"][i]);
+              computeTaskData(task["children"][i]);
             }
             return;
           }
           for (var key in allTasks) {
             if (allTasks[key]["parent"] == "") {
-              getTaskColor(allTasks[key]);
-              getTaskProject(allTasks[key]);
-              for(var i = 0; i < allTasks[key]["children"].length; ++i) {
-                initTaskData(allTasks[key]["children"][i]);
-              }
+              computeTaskData(allTasks[key]);
             }
           }
         }
 
-        function getTaskColor(task) {
+        function computeTaskColor(task) {
           if (parseInt(task["completion"]) == 1) {
             task['_color'] = "black";
-            return task['_color'];
-          }
-
-          if (! task['_available']) {
+          } else if (! task['_available']) {
             task['_color'] = "gray";
-            return task['_color'];
-          }
-
-          if (task['color'] != "") {
+          } else if (task['color'] != "") {
             task['_color'] = task['color'];
-            return task['_color'];
+          } else if (task['parent'] > 0) { //Inherit
+            task['_color'] = computeTaskColor(allTasks[task['parent']]);
+          } else {
+            task['_color'] = "gray";
           }
-
-          if (task['parent'] > 0) { //Inherit
-            task['_color'] = getTaskColor(allTasks[task['parent']]);
-            // task['_color'] = allTasks[task["parent"]]["_color"];
-            return task['_color'];
-          }
-
-          task['_color'] = "gray";
           return task['_color'];
+        }
+
+        function computeTaskProject(task) {
+          if (task['project'] != "") { //Get explicitly stated project
+            task['_project'] = task['project'];
+          } else if (task['parent'] > 0) { //Inherit
+            task['_project'] = computeTaskProject(allTasks[task['parent']]);
+          } else { //Return a default
+            task['_project'] = "default";
+          }
+          return task['_project'];
         }
 
         function getTaskDueDate(task,shortDate=false) {
@@ -263,28 +259,8 @@
           return (t != "" ? parseHmsTime(t) : t);
         }
 
-        function getTaskProject(task) {
-          //Get explicitly stated project
-          if (task['project'] != "") {
-            task['_project'] = task['project'];
-            return task['_project'];
-          }
-          //Use previously computed project
-          if ('_project' in task) {
-            return task['_project'];
-          }
-          //Infer project from parent
-          if (task['parent'] > 0) { //Inherit
-            task['_project'] = allTasks[task["parent"]]["_project"];
-            return task['_project'];
-          }
-          //Return a default
-          return "default";
-        }
-
         function getTaskProgress(task) {
-          comp = task['completion'];
-          return '<meter value="'+comp+'"></meter>';
+          return '<meter value="'+task['completion']+'"></meter>';
         }
 
       // Task Modification
@@ -294,7 +270,7 @@
           ss += '<div class="tooltipclass">';
           ss += "<table class='tttable'>"
           ss += "<tr><td>Task</td><td>["+task["id"]+"] "+task["desc"]+"</td></tr>";
-          ss += "<tr><td>Project</td><td>"+getTaskProject(task)+"</td></tr>";
+          ss += "<tr><td>Project</td><td>"+computeTaskProject(task)+"</td></tr>";
           ss += "<tr><td colspan='2'><hr/></td></tr>";
           ss += "<tr><td colspan='2'>"+task["_dependencies"]+"</td></tr>";
           ss += "<tr><td colspan='2'>"+task["_tooltip"]+"</td></tr>";
@@ -442,8 +418,8 @@
             ss += addModifiableField("Recur Rate","modify_recurRate",task["recurRate"]);
             ss += addModifiableField("Color","modify_color",task["color"]);
             ss += addModifiableField("Est. Time","modify_estTime",task["estTime"]);
-            ss += addSelectField("Parent","modify_parent",task["parent"],true);
-            ss += addSelectField("Dependencies","modify_deps",task["deps"],true);
+            ss += addSelectField("Parent","modify_parent",task["parent"]);
+            ss += addSelectField("Dependencies","modify_deps",task["deps"]);
             ss += addModifiableField("Completion","modify_completion",task["completion"]);
           ss += "<tr>";
           ss += "<td><input onclick='dismissModifedTask()' type='button' value='dismiss'/></td>";
@@ -526,7 +502,7 @@
           }
         }
 
-        function addSelectField(title,id,defVal,allowMultiple) {
+        function addSelectField(title,id,defVal) {
           var deps = (defVal+"").split(",");
           var m = (allowMultiple ? "multiple" : "");
           var ss = ""
@@ -619,7 +595,7 @@
                 cs = 1;
                 for(var i = 0; i < todayTasks[ts].length; ++i) {
                   var tti = todayTasks[ts][i];
-                  var tc = getTaskColor(tti);
+                  var tc = computeTaskColor(tti);
                   var rowskip = (writeTaskEstimatedTime(tti,true)/15)-1;
                   // var tc = "Green";
                   ss += "<td class='calendarCell' rowspan="+(rowskip+1)+" colspan="+cs+" style='background-color: "+tc+";'>";
@@ -873,7 +849,7 @@
 
         function writeTaskDescription(indent,task) {
           var ss = "";
-          var color = getTaskColor(task);
+          var color = computeTaskColor(task);
           ss += ('<td><div class="indentDiv" style="'
             +indentTextString(indent)
             +'" onclick="modifyTask('+task["id"]+')">'
@@ -1287,34 +1263,8 @@
 
       // Todo list data generation
 
-        //TODO: heavily clean up this function
-        function computeExtraTaskData(task,recurse=false) {
-
-          // alert(JSON.stringify(task,null,2));
-
-          if (task['completion'] == "") {
-            task['completion'] = "0";
-          }
-
-          if (! "_collapsed" in task) {
-            task["_collapsed"] = false;
-          }
-          task["_tooltip"] = "This task can be done now.";
+        function computeTaskDependencies(task) {
           task["_dependencies"] = "";
-          task["_dueDateTime"] = task["dueDate"]+" "+task["dueTime"];
-          task["_schedDateTime"] = task["schedDate"]+" "+task["schedTime"];
-          task["_startDateTime"] = task["startDate"]+" "+task["startTime"];
-
-          task['_available'] = true;
-
-          var startDate = parseYmdDate(task['startDate'],false);
-          if (parseInt(task["completion"]) == 1) {
-            task['_available'] = false;  //Don't need to do finished tasks
-            task["_tooltip"] = "Already done!";
-          } else if (startDate > Date.now()) { //TODO: not guaranteed to have a valid startDate
-            task['_available'] = false;  //Can't do future tasks
-            task["_tooltip"] = "Not available until "+task['startDate']+" at "+task['startTime'];
-          }
           if (task["deps"] != "") {
             var deps = task['deps'].split(",");
             if (deps.length > 0) {
@@ -1343,6 +1293,36 @@
             task["deps"] = deps.join();
             task["_dependencies"] +=  "<tr><td colspan='2'><hr/></td></tr>";
           }
+        }
+
+        //TODO: heavily clean up this function
+        function computeExtraTaskData(task,recurse=false) {
+          if (task['completion'] == "") {
+            task['completion'] = "0";
+          }
+          if (! "_collapsed" in task) {
+            task["_collapsed"] = false;
+          }
+
+          //Combine date / time
+          task["_dueDateTime"]   = task["dueDate"]  +" "+task["dueTime"];
+          task["_schedDateTime"] = task["schedDate"]+" "+task["schedTime"];
+          task["_startDateTime"] = task["startDate"]+" "+task["startTime"];
+
+          //Get task tooltip
+          if (parseInt(task["completion"]) == 1) {
+            task['_available'] = false;  //Don't need to do finished tasks
+            task["_tooltip"] = "Already done!";
+          } else if (parseYmdDate(task['startDate'],false) > Date.now()) {
+            //TODO: not guaranteed to have a valid startDate
+            task['_available'] = false;  //Can't do future tasks
+            task["_tooltip"] = "Not available until "+task['startDate']+" at "+task['startTime'];
+          } else {
+            task['_available'] = true;
+            task["_tooltip"] = "This task can be done now.";
+          }
+
+          computeTaskDependencies(task);
 
           if (recurse) {
             for(var i = 0; i < task["children"].length; ++i) {
@@ -1364,7 +1344,7 @@
           parseTaskCSV(_config["data_file"],_config["data_file_fallback"]);
           computeAllExtraTaskData();
           document.write(writeAllTaskData());
-          initTaskData();
+          computeTaskData();
           sortTasks(_config["default_sort"],_config["default_sort_child"],true);
           if (_config["start_collapsed"]) {
             collapseAllTasks(true);
