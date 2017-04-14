@@ -504,7 +504,7 @@
 
         function addSelectField(title,id,defVal) {
           var deps = (defVal+"").split(",");
-          var m = (allowMultiple ? "multiple" : "");
+          var m = "multiple";
           var ss = ""
             +"<tr><td>"+title+"</td><td>"
             +'<select '+m+' class="chosen-select" '
@@ -560,23 +560,54 @@
 
         //TODO: finish
         function writeCalendarTable() {
-          var todayTasks = {};
-          var today = unparseYmdDate(new Date());
-          for (var key in allTasks) {
-            if (allTasks[key]["schedDate"] == today) {
-              if (allTasks[key]["schedTime"] != "") {
-                var as = allTasks[key]["schedTime"];
-                var ts = as.substr(0,2)+":"+as.substr(3,2);
-                if (ts in todayTasks) {
-                  todayTasks[ts].push(allTasks[key]);
-                } else {
-                  todayTasks[ts] = [];
-                  todayTasks[ts].push(allTasks[key]);
+          var todayTasks = [];
+          var cellsTaken = [];
+          var maxCellsTaken = [];
+          theDate = new Date();
+
+          //Scan all tasks scheduled for today until 7 days ahead
+          for(var d = 0; d < 7; ++d) {
+            todayTasks[d] = {};
+            cellsTaken[d] = {};
+            maxCellsTaken[d] = 0;
+            var nextday = unparseYmdDate(theDate);
+            for (var key in allTasks) {
+              if (allTasks[key]["schedDate"] == nextday) {
+                if (allTasks[key]["schedTime"] != "" && allTasks[key]["estTime"] != "") {
+                  var as = allTasks[key]["schedTime"];
+                  var hour = parseInt(as.substr(0,2));
+                  var minute = parseInt(as.substr(3,2));
+                  var ts = hour+":"+((minute<10) ? "0"+minute : minute);
+                  if (ts in todayTasks[d]) {} else {
+                    todayTasks[d][ts] = [];
+                    cellsTaken[d][ts] = 0;
+                  }
+                  todayTasks[d][ts].push(allTasks[key]);
+                  var ncellsTaken = writeTaskEstimatedTime(allTasks[key],true) / _config["minute_interval"];
+                  for (var i = 0; i < ncellsTaken; ++i) {
+                    var ts = hour+":"+((minute<10) ? "0"+minute : minute);
+                    // alert(ts + " -> " + allTasks[key]["desc"]);
+                    if (ts in cellsTaken[d] ) {} else {
+                      cellsTaken[d][ts] = 0;
+                    }
+                    cellsTaken[d][ts] += 1;
+                    if (cellsTaken[d][ts] > maxCellsTaken[d]) {
+                      maxCellsTaken[d] = cellsTaken[d][ts];
+                    }
+                    minute += _config["minute_interval"];
+                    if (minute >= 60) {
+                      minute -= 60;
+                      hour += 1;
+                    }
+                  }
+                  // alert(cellsTaken);
                 }
               }
             }
+            theDate.setDate(theDate.getDate()+1);
           }
 
+          var day = 0;
           var ss = "";
           var startHour = 7;
           var endHour = 23;
@@ -584,19 +615,19 @@
           var hour = startHour;
           var rowskip = 0;
           while(true) {
-            var ts = hour + ":" + ((minute == 0) ? minute+"0" : minute+"");
+            var ts = hour + ":" + ((minute < 10) ? "0"+minute : minute);
             ss += "<tr><td>"+ts+"</td>";
-            if (rowskip > 0 && !(ts in todayTasks)) {
+            if (rowskip > 0 && !(ts in todayTasks[day])) {
               rowskip -= 1;
               ss += "<td></td></tr>";
             } else {
-              if (ts in todayTasks) {
-                // cs = 12/(todayTasks[ts].length);
-                cs = 1;
-                for(var i = 0; i < todayTasks[ts].length; ++i) {
-                  var tti = todayTasks[ts][i];
+              if (ts in todayTasks[day]) {
+                cs = 12/(cellsTaken[day][ts]);
+                // cs = 1;
+                for(var i = 0; i < todayTasks[day][ts].length; ++i) {
+                  var tti = todayTasks[day][ts][i];
                   var tc = computeTaskColor(tti);
-                  var rowskip = (writeTaskEstimatedTime(tti,true)/15)-1;
+                  var rowskip = (writeTaskEstimatedTime(tti,true)/_config["minute_interval"])-1;
                   // var tc = "Green";
                   ss += "<td class='calendarCell' rowspan="+(rowskip+1)+" colspan="+cs+" style='background-color: "+tc+";'>";
                   ss += tti["desc"];
@@ -604,11 +635,11 @@
                 }
                 ss += "</tr>";
               } else {
-                cs = 1;
+                cs = 12/(cellsTaken[day][ts]);
                 ss += "<td class='calendarCell' colspan="+cs+"></td></tr>";
               }
             }
-            minute += 15;
+            minute += _config["minute_interval"];
             if (minute == 60) {
               hour += 1;
               if (hour > endHour)
@@ -958,6 +989,7 @@
             writtenIDs[minid] = true;
             if (recurse) {
               //Write the task data for the minimal task, preserving it's indentation
+              allTasks[minid]["_collapsed"] = false;
               trows += writeTaskData(allTasks[minid],depth,false);
               //Write all of the children as well
               trows += sortTasks(sortKey,true,descend,minid,depth+1);
